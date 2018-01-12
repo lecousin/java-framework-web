@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebServerConfig>
+	<listening>
+		<bind>
+			<ipAddresses>127.0.0.1</ipAddresses>
+			<secure>false</secure>
+			<port>1080</port>
+		</bind>
+		<bind>
+			<ipAddresses>127.0.0.1</ipAddresses>
+			<secure>true</secure>
+			<port>1443</port>
+		</bind>
+	</listening>
+	<routing>
+		<route>
+			<ipAddresses>127.0.0.1</ipAddresses>
+			<hostnames>localhost</hostnames>
+			<processorByPath path="my_context" class="net.lecousin.framework.web.WebResourcesBundle" config="test-webserver/myapp.xml"/>
+		</route>
+	</routing>
+</WebServerConfig>

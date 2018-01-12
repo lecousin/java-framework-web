@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LoggingConfiguration>
+	<Appender
+		name="consoleDebug"
+		class="net.lecousin.framework.log.appenders.ConsoleAppender"
+		level="DEBUG"
+		pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] %logger{25} %m"
+	/>
+	<Appender
+		name="consoleTrace"
+		class="net.lecousin.framework.log.appenders.ConsoleAppender"
+		level="TRACE"
+		pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] %logger{25} %m"
+	/>
+	<Default appender="consoleDebug"/>
+	<Logger name="network" appender="consoleTrace"/>
+	<Logger name="network-data" appender="consoleTrace"/>
+	<Logger name="SSL" appender="consoleTrace"/>
+	<Logger name="net.lecousin.framework.network.client.TCPClient" appender="consoleTrace"/>
+	<Logger name="net.lecousin.framework.network.client.SSLClient" appender="consoleTrace"/>
+	<Logger name="net.lecousin.framework.network.http.HTTPRequest" appender="consoleTrace"/>
+	<Logger name="net.lecousin.framework.network.http.HTTPResponse" appender="consoleTrace"/>
+	<Logger name="net.lecousin.framework.network.mime.MIME" appender="consoleTrace"/>
+	<Logger name="net.lecousin.framework.network.http.server.HTTPServerProtocol" appender="consoleTrace"/>
+</LoggingConfiguration>

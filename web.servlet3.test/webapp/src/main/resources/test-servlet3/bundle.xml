@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle
+	xmlns="http://code.lecousin.net/java/net.lecousin.framework.web/bundle/0.1"
+>
+	<Injection xmlns="http://code.lecousin.net/java/net.lecousin.framework.injection/0.1">
+		<property name="version" value="1.0"/>
+		<Singleton id="testAuthenticationProvider" type="net.lecousin.framework.web.security.IAuthenticationProvider">
+			<class name="net.lecousin.framework.web.servlet3.test.TestAuthenticationProvider"/>
+		</Singleton>
+	</Injection>
+	<bundle path="services">
+		<service class="net.lecousin.framework.web.servlet3.test.TestRestService"/>
+	</bundle>
+
+</bundle>

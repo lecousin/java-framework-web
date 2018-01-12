@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+	      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	      xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+	      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	      version="3.0">
+  <display-name>Servlet 3.0 Web Application</display-name>
+
+    <servlet>
+        <servlet-name>LCBootstrapServlet</servlet-name>
+        <servlet-class>net.lecousin.core.javaee.BootstrapServlet</servlet-class>
+        <init-param>
+        	<param-name>properties</param-name>
+        	<param-value>classpath:properties</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>WebResourcesBundleServlet</servlet-name>
+        <servlet-class>net.lecousin.framework.web.servlet3.WebResourcesBundleServlet</servlet-class>
+        <init-param>
+        	<param-name>configFile</param-name>
+        	<param-value>test-servlet3/bundle.xml</param-value>
+        </init-param>
+        <!-- To work with WebSphere application server -->
+        <init-param>
+			<param-name>com.ibm.ws.webcontainer.async-supported</param-name>
+			<param-value>true</param-value>
+		</init-param>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>WebResourcesBundleServlet</servlet-name>
+        <url-pattern>*</url-pattern>
+    </servlet-mapping>
+
+</web-app>     

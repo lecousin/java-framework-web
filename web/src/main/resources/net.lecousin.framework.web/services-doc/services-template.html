@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Web Services</h1>
+
+<div>
+	@{web-service-types{
+		<div>
+			<a href='#@@web-service-type@@'>@@web-service-type@@</a>
+		</div>
+	}web-service-types}@
+</div>
+
+@{web-service-types{
+<a name='@@web-service-type@@'><h2>@@web-service-type@@</h2></a>
+
+@{services{
+<div>
+	<div>
+		@@service-path@@
+	</div>
+	<div>
+		@@service-description@@
+	</div>
+	@{service-specifications{
+		<div>
+			<a href='@@specification-url@@'>@@specification-name@@</a>
+		</div>
+	}service-specifications}@
+	<table>
+		<tr><th>Operation</th><th>Description</th></tr>
+		@{service-operations{
+		<tr><td>@@operation-name@@</td><td>@@operation-description@@</td></tr>
+		}service-operations}@
+	</table>
+</div>
+}services}@
+
+}web-service-types}@
+
+</body>
+</html>

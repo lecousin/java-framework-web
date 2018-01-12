@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="web.servlet3.test.ear-0.1">
+        <wb-resource deploy-path="/" source-path="/target/m2e-wtp/ear-resources"/>
+        <wb-resource deploy-path="/" source-path="/src/main/application" tag="defaultRootSource"/>
+        <dependent-module archiveName="web.servlet3.test.webapp-0.1.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.web.servlet3.test.webapp/net.lecousin.framework.web.servlet3.test.webapp">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="web.servlet3-0.1.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.web.servlet3/net.lecousin.framework.web.servlet3">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="web-0.1.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.web/net.lecousin.framework.web">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="http-0.2.1.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.http/net.lecousin.framework.network.http">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="core-0.2.3.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.core/net.lecousin.framework.network.core">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-logging-1.2.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-logging/commons-logging/1.2/commons-logging-1.2.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="mime-0.2.1.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.mime/net.lecousin.framework.network.mime">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="gzip-0.1.5.jar" deploy-path="/" handle="module:/resource/net.lecousin.compression.gzip/net.lecousin.compression.gzip">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="deflate-0.1.5.jar" deploy-path="/" handle="module:/resource/net.lecousin.compression.deflate/net.lecousin.compression.deflate">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="injection-0.1.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.injection/net.lecousin.framework.injection">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="json-0.1.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.json/net.lecousin.framework.json">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="org.everit.json.schema-1.6.1.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/github/everit-org/json-schema/org.everit.json.schema/1.6.1/org.everit.json.schema-1.6.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="json-20171018.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/org/json/json/20171018/json-20171018.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="guava-22.0.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/google/guava/guava/22.0/guava-22.0.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="error_prone_annotations-2.0.18.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/google/errorprone/error_prone_annotations/2.0.18/error_prone_annotations-2.0.18.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="j2objc-annotations-1.1.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/google/j2objc/j2objc-annotations/1.1/j2objc-annotations-1.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="animal-sniffer-annotations-1.14.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/org/codehaus/mojo/animal-sniffer-annotations/1.14/animal-sniffer-annotations-1.14.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-validator-1.6.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-validator/commons-validator/1.6/commons-validator-1.6.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-beanutils-1.9.2.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-beanutils/commons-beanutils/1.9.2/commons-beanutils-1.9.2.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-digester-1.8.1.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-digester/commons-digester/1.8.1/commons-digester-1.8.1.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="commons-collections-3.2.2.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-collections/commons-collections/3.2.2/commons-collections-3.2.2.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="handy-uri-templates-2.1.6.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/damnhandy/handy-uri-templates/2.1.6/handy-uri-templates-2.1.6.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="joda-time-2.9.4.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/joda-time/joda-time/2.9.4/joda-time-2.9.4.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="core.javaee-0.9.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="core-0.9.11.jar" deploy-path="/" handle="module:/resource/net.lecousin.core/net.lecousin.core">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spotbugs-annotations-3.1.0.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/github/spotbugs/spotbugs-annotations/3.1.0/spotbugs-annotations-3.1.0.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jsr305-3.0.2.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+    </wb-module>
+</project-modules>

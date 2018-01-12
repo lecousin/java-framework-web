@@ -1,0 +1,2 @@
+net.lecousin.framework.web.services.WebServiceProviders
+net.lecousin.framework.web.services.rest.RESTSpecificationExtension

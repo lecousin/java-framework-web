@@ -1,0 +1,28 @@
+<project>
+   <modelVersion>4.0.0</modelVersion>
+   <parent>
+      <groupId>net.lecousin.framework</groupId>
+      <artifactId>web.servlet3.test</artifactId>
+      <version>0.1.0</version>
+   </parent>
+   <artifactId>web.servlet3.test.webapp</artifactId>
+   <packaging>war</packaging>
+   <dependencies>
+   	<dependency>
+   		<groupId>${project.groupId}</groupId>
+   		<artifactId>web.servlet3</artifactId>
+   		<version>${project.version}</version>
+   	</dependency>
+   </dependencies>
+   <build>
+   	<resources>
+   		<resource>
+   			<directory>src/main/resources</directory>
+   		</resource>
+   		<resource>
+   			<directory>src/main/resources-filtered</directory>
+   			<filtering>true</filtering>
+   		</resource>
+   	</resources>
+   </build>
+</project>

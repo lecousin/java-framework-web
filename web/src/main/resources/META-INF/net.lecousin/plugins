@@ -1,0 +1,3 @@
+net.lecousin.framework.web.services.WebServiceProviders:net.lecousin.framework.web.services.rest.RESTWebServiceProviderPlugin
+net.lecousin.framework.web.services.WebServiceProviders:net.lecousin.framework.web.services.soap.SOAPWebServiceProviderPlugin
+net.lecousin.framework.web.services.rest.RESTSpecificationExtension:net.lecousin.framework.web.services.rest.SwaggerSpecificationPlugin
