@@ -1,5 +1,7 @@
 package net.lecousin.framework.web;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import net.lecousin.framework.LCCoreVersion;
@@ -47,6 +49,11 @@ public class TestWebServer extends AbstractTest {
 		p.getValue1().close();
 		Assert.assertEquals(3, p.getValue2().getStatusCode() / 100);
 		Assert.assertEquals("/my_context/static/1.0/test", p.getValue2().getMIME().getHeaderSingleValue("Location"));
+
+		p = HTTPClientUtil.sendAndReceiveHeaders(Method.GET, "http://localhost:1080/my_context/static/test/0.1/hello", (IO.Readable)null).blockResult(0);
+		p.getValue1().close();
+		Assert.assertEquals(3, p.getValue2().getStatusCode() / 100);
+		Assert.assertEquals("/my_context/static/1.0/0.1/hello", p.getValue2().getMIME().getHeaderSingleValue("Location"));
 	}
 	
 	@Test(timeout=120000)
@@ -68,10 +75,27 @@ public class TestWebServer extends AbstractTest {
 	}
 	
 	@Test(timeout=120000)
-	public void testTest1Processor() throws Exception {
+	public void testStaticFromFileSystem() throws Exception {
+		File tmp = File.createTempFile("test", "web");
+		FileOutputStream out = new FileOutputStream(tmp);
+		out.write("file system".getBytes());
+		out.close();
+		Pair<HTTPResponse, IO.Readable.Seekable> p = HTTPClientUtil.GETfully("http://localhost:1080/my_context/static/1.0/fs/" + tmp.getName(), 0).blockResult(0);
+		String content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
+		Assert.assertEquals("file system", content);
+	}
+	
+	@Test(timeout=120000)
+	public void testTest1ProcessorAndCache() throws Exception {
 		Pair<HTTPResponse, IO.Readable.Seekable> p = HTTPClientUtil.GETfully("http://localhost:1080/my_context/cached", 0).blockResult(0);
 		String content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
 		Assert.assertEquals("This is test 1", content);
+		Assert.assertTrue(p.getValue1().getMIME().getHeaderSingleValue("Cache-Control").contains("public"));
+		
+		p = HTTPClientUtil.GETfully("http://localhost:1080/my_context/cached/not", 0).blockResult(0);
+		content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
+		Assert.assertEquals("This is test 1", content);
+		Assert.assertTrue(p.getValue1().getMIME().getHeaderSingleValue("Cache-Control").contains("no-cache"));
 	}
 	
 	@Test(timeout=120000)

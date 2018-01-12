@@ -27,6 +27,12 @@
 			<attribute name="maxAge" value="10 days"/>
 		</pre-filter>
 		<processor path="" class="net.lecousin.framework.web.test.Test1Processor"/>
+		<bundle path="not">
+			<pre-filter class="net.lecousin.framework.web.filters.CacheFilter">
+				<attribute name="maxAge" value="-1"/>
+			</pre-filter>
+			<processor path="" class="net.lecousin.framework.web.test.Test1Processor"/>
+		</bundle>
 	</bundle>
 	<bundle path="services">
 		<custom-filter class="net.lecousin.framework.web.services.soap.filters.GetAuthenticationRequestFromSOAPHeader"/>
@@ -43,6 +49,9 @@
 			<processor path="" class="net.lecousin.framework.web.StaticResourcesProcessor">
 				<attribute name="fromClassPath" value="test-webserver/static"/>
 				<attribute name="directoryPages" value="index.htm,index.html"/>
+			</processor>
+			<processor path="fs" class="net.lecousin.framework.web.StaticResourcesProcessor">
+				<attribute name="fromFileSystem" value="${java.io.tmpdir}"/>
 			</processor>
 		</bundle>
 		<processor path="" class="net.lecousin.framework.web.VersionRedirection">

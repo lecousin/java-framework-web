@@ -59,13 +59,17 @@ public final class SOAPUtil {
 		if (message.bodyNamespaceURI != null)
 			namespaces.put(message.bodyNamespaceURI, "message");
 		openEnvelope(writer, namespaces);
-		openHeader(writer);
-		sendHeader(message, 0, output, bout, writer, rules);
+		if (message.headers.isEmpty()) {
+			sendBody(false, message, output, bout, writer, rules);
+		} else {
+			openHeader(writer);
+			sendHeader(message, 0, output, bout, writer, rules);
+		}
 	}
 	
 	private static void sendHeader(SOAPMessageContent message, int headerIndex, OutputToInput out, SimpleBufferedWritable bout, XMLWriter writer, List<SerializationRule> rules) {
 		if (headerIndex == message.headers.size()) {
-			sendBody(message, out, bout, writer, rules);
+			sendBody(true, message, out, bout, writer, rules);
 			return;
 		}
 		SOAPMessageContent.Header header = message.headers.get(headerIndex);
@@ -93,8 +97,9 @@ public final class SOAPUtil {
 		}), true);
 	}
 	
-	private static void sendBody(SOAPMessageContent message, OutputToInput out, SimpleBufferedWritable bout, XMLWriter writer, List<SerializationRule> rules) {
-		writer.closeElement();
+	private static void sendBody(boolean closeHeader, SOAPMessageContent message, OutputToInput out, SimpleBufferedWritable bout, XMLWriter writer, List<SerializationRule> rules) {
+		if (closeHeader)
+			writer.closeElement();
 		openBody(writer);
 		ISynchronizationPoint<? extends Exception> write;
 		if (message.bodyContent == null)

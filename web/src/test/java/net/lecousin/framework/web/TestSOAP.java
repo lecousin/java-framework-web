@@ -40,6 +40,12 @@ public class TestSOAP extends AbstractTest {
 	}
 
 	@Test(timeout=120000)
+	public void testSOAPHelloWorldFromQuery() throws Exception {
+		TestSoapService.TestResult response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap?name=World+of+query", "helloFromQuery", null, "http://testRequest", TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		Assert.assertEquals("Hello World of query", response.hello);
+	}
+
+	@Test(timeout=120000)
 	public void testSOAPAnyInputAndOutput() throws Exception {
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element req = doc.createElement("MyElement");

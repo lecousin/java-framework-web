@@ -26,7 +26,7 @@
         <dependent-module archiveName="deflate-0.1.5.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.compression.deflate/net.lecousin.compression.deflate">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="injection-0.1.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.injection/net.lecousin.framework.injection">
+        <dependent-module archiveName="injection-0.1.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.injection/net.lecousin.framework.injection">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="json-0.1.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.json/net.lecousin.framework.json">

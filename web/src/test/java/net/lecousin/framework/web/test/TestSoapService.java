@@ -1,5 +1,7 @@
 package net.lecousin.framework.web.test;
 
+import net.lecousin.framework.concurrent.Task;
+import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.services.WebService;
 import net.lecousin.framework.web.services.soap.SOAP;
@@ -58,6 +60,17 @@ public class TestSoapService implements SOAP {
 		TestResult res = new TestResult();
 		res.hello = "Hello " + req.name;
 		return res;
+	}
+	
+	@SOAP.Operation(action="helloFromQuery")
+	public AsyncWork<TestResult, Exception> helloWorldFromQuery(@WebService.Query(name="name", required=true) String name) {
+		AsyncWork<TestResult, Exception> result = new AsyncWork<>();
+		new Task.Cpu.FromRunnable("Test", Task.PRIORITY_LOW, () -> {
+			TestResult res = new TestResult();
+			res.hello = "Hello " + name;
+			result.unblockSuccess(res);
+		}).start();
+		return result;
 	}
 	
 	@SOAP.Operation
