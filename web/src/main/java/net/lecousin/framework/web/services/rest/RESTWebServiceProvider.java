@@ -39,6 +39,7 @@ import net.lecousin.framework.plugins.ExtensionPoints;
 import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.util.Triple;
 import net.lecousin.framework.web.WebRequest;
+import net.lecousin.framework.web.WebRequestProcessor;
 import net.lecousin.framework.web.WebResourcesBundle;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
@@ -84,8 +85,14 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 	private List<RestMethod> deleteMethods = new ArrayList<>();
 	private List<RestMethod> subResources = new ArrayList<>();
 	
-	public WebResourcesBundle getBundle() {
+	@Override
+	public WebResourcesBundle getParent() {
 		return bundle;
+	}
+	
+	@Override
+	public void setParent(WebRequestProcessor parent) {
+		throw new IllegalStateException("setParent cannot be called on a web service provider");
 	}
 	
 	@Override
@@ -536,7 +543,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 	
 	@SuppressWarnings("resource")
 	@Override
-	public ISynchronizationPoint<?> process(Object fromCheck, WebRequest request, WebResourcesBundle bundle) {
+	public ISynchronizationPoint<?> process(Object fromCheck, WebRequest request) {
 		if (fromCheck instanceof RESTSpecificationPlugin) {
 			MemoryIO io = new MemoryIO(8192, "REST specification");
 			OutputToInput o2i = new OutputToInput(io, "REST specification");
@@ -563,7 +570,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 		String myPath = request.getCurrentPath();
 		String subPath = request.getSubPath();
 		request.setPath(mp, sp);
-		ISynchronizationPoint<?> res = rm.subResource.process(o, request, bundle);
+		ISynchronizationPoint<?> res = rm.subResource.process(o, request);
 		SynchronizationPoint<Exception> result = new SynchronizationPoint<>();
 		res.listenInline(() -> {
 			request.setPath(myPath, subPath);

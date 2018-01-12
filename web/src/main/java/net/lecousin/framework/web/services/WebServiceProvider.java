@@ -2,21 +2,19 @@ package net.lecousin.framework.web.services;
 
 import java.util.List;
 
-import net.lecousin.framework.concurrent.synch.ISynchronizationPoint;
-import net.lecousin.framework.web.WebRequest;
+import net.lecousin.framework.web.WebRequestProcessor;
 import net.lecousin.framework.web.WebResourcesBundle;
 
 /** Provide a specific type of web service, such as REST, or SOAP... */
-public interface WebServiceProvider {
+public interface WebServiceProvider extends WebRequestProcessor {
 
+	@Override
+	public WebResourcesBundle getParent();
+	
 	public String getServiceTypeName();
 	
 	public String getDefaultPath();
 	public Object getWebService();
-	
-	public Object checkProcessing(WebRequest request);
-	
-	public ISynchronizationPoint<?> process(Object fromCheck, WebRequest request, WebResourcesBundle bundle);
 	
 	/** Describe an operation, for documentation. */
 	public static class OperationDescription {

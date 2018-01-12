@@ -98,7 +98,7 @@ public class SwaggerSpecificationPlugin implements RESTSpecificationPlugin {
 								writer.addObjectAttribute("required", p.required);
 								writer.addObjectAttribute("schema");
 								writer.openObject();
-								new JSONSpecWriter(writer).specifyValue(null, new TypeDefinition(p.type), provider.getBundle().getSerializationRules()).blockThrow(0);
+								new JSONSpecWriter(writer).specifyValue(null, new TypeDefinition(p.type), provider.getParent().getSerializationRules()).blockThrow(0);
 								writer.closeObject();
 							}
 							writer.closeArray();
@@ -112,7 +112,7 @@ public class SwaggerSpecificationPlugin implements RESTSpecificationPlugin {
 							writer.openObject();
 							writer.addObjectAttribute("schema");
 							writer.openObject();
-							new JSONSpecWriter(writer).specifyValue(null, op.bodyType, provider.getBundle().getSerializationRules()).blockThrow(0);
+							new JSONSpecWriter(writer).specifyValue(null, op.bodyType, provider.getParent().getSerializationRules()).blockThrow(0);
 							writer.closeObject(); // schema
 							writer.closeObject(); // json
 							writer.closeObject(); // content
@@ -141,7 +141,7 @@ public class SwaggerSpecificationPlugin implements RESTSpecificationPlugin {
 							writer.openObject();
 							writer.addObjectAttribute("schema");
 							writer.openObject();
-							new JSONSpecWriter(writer).specifyValue(null, op.returnType, provider.getBundle().getSerializationRules()).blockThrow(0);
+							new JSONSpecWriter(writer).specifyValue(null, op.returnType, provider.getParent().getSerializationRules()).blockThrow(0);
 							writer.closeObject(); // schema
 							writer.closeObject(); // json
 							writer.closeObject(); // content

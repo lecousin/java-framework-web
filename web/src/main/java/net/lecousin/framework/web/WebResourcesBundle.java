@@ -41,7 +41,6 @@ import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.util.Provider;
 import net.lecousin.framework.util.Triple;
 import net.lecousin.framework.util.UnprotectedStringBuffer;
-import net.lecousin.framework.web.services.ServiceProcessor;
 import net.lecousin.framework.web.services.WebServiceProvider;
 import net.lecousin.framework.web.services.WebServiceProviderPlugin;
 import net.lecousin.framework.web.services.WebServiceProviders;
@@ -611,7 +610,7 @@ public class WebResourcesBundle implements WebRequestProcessor {
 				path = provider.getDefaultPath();
 			if (!path.isEmpty() && !path.endsWith("/"))
 				path += "/";
-			processors.add(new Pair<>(path, new ServiceProcessor(this, provider)));
+			processors.add(new Pair<>(path, provider));
 		}
 	}
 	

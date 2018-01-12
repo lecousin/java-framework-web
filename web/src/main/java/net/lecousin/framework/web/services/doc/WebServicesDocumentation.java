@@ -22,7 +22,6 @@ import net.lecousin.framework.util.UnprotectedStringBuffer;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestProcessor;
 import net.lecousin.framework.web.WebResourcesBundle;
-import net.lecousin.framework.web.services.ServiceProcessor;
 import net.lecousin.framework.web.services.WebService;
 import net.lecousin.framework.web.services.WebServiceProvider;
 import net.lecousin.framework.web.services.WebServiceProvider.OperationDescription;
@@ -82,7 +81,7 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 				sp.unblock();
 				return null;
 			}
-			LinkedList<Pair<String, ServiceProcessor>> services = new LinkedList<>();
+			LinkedList<Pair<String, WebServiceProvider>> services = new LinkedList<>();
 			searchServices((WebResourcesBundle)p, "", services);
 			if (services.isEmpty()) {
 				request.getResponse().setContentType("text/html;charset=utf-8");
@@ -97,11 +96,11 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			read.getOutput().listenInline(() -> { io.closeAsync(); });
 			
 			// list by service type
-			Map<String, List<Pair<String, ServiceProcessor>>> byType = new HashMap<>();
-			for (Pair<String, ServiceProcessor> proc : services) {
-				WebServiceProvider provider = proc.getValue2().getServiceProvider();
+			Map<String, List<Pair<String, WebServiceProvider>>> byType = new HashMap<>();
+			for (Pair<String, WebServiceProvider> proc : services) {
+				WebServiceProvider provider = proc.getValue2();
 				String s = provider.getServiceTypeName();
-				List<Pair<String, ServiceProcessor>> list = byType.get(s);
+				List<Pair<String, WebServiceProvider>> list = byType.get(s);
 				if (list == null) {
 					list = new LinkedList<>();
 					byType.put(s, list);
@@ -110,13 +109,13 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			}
 
 			DocContext ctx = new DocContext();
-			for (Map.Entry<String, List<Pair<String, ServiceProcessor>>> type : byType.entrySet()) {
+			for (Map.Entry<String, List<Pair<String, WebServiceProvider>>> type : byType.entrySet()) {
 				DocContext typeCtx = ctx.addListElement("web-service-types");
 				typeCtx.setVariable("web-service-type", type.getKey());
-				for (Pair<String, ServiceProcessor> proc : type.getValue()) {
+				for (Pair<String, WebServiceProvider> proc : type.getValue()) {
 					DocContext procCtx = typeCtx.addListElement("services");
 					procCtx.setVariable("service-path", proc.getValue1());
-					WebServiceProvider provider = proc.getValue2().getServiceProvider();
+					WebServiceProvider provider = proc.getValue2();
 					Object service = provider.getWebService();
 					WebService.Description descr = service.getClass().getAnnotation(WebService.Description.class);
 					procCtx.setVariable("service-description", descr != null ? descr.value() : "No description");
@@ -149,10 +148,10 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			return null;
 		}
 		
-		private void searchServices(WebResourcesBundle bundle, String path, LinkedList<Pair<String, ServiceProcessor>> services) {
+		private void searchServices(WebResourcesBundle bundle, String path, LinkedList<Pair<String, WebServiceProvider>> services) {
 			for (Pair<String, WebRequestProcessor> p : bundle.getProcessors()) {
-				if (p.getValue2() instanceof ServiceProcessor) {
-					services.add(new Pair<>(path + p.getValue1(), (ServiceProcessor)p.getValue2()));
+				if (p.getValue2() instanceof WebServiceProvider) {
+					services.add(new Pair<>(path + p.getValue1(), (WebServiceProvider)p.getValue2()));
 				} else if (p.getValue2() instanceof WebResourcesBundle) {
 					searchServices((WebResourcesBundle)p.getValue2(), path + p.getValue1(), services);
 				}

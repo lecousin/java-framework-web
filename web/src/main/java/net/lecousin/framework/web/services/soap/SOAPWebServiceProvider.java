@@ -36,6 +36,7 @@ import net.lecousin.framework.network.session.Session;
 import net.lecousin.framework.util.ClassUtil;
 import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.web.WebRequest;
+import net.lecousin.framework.web.WebRequestProcessor;
 import net.lecousin.framework.web.WebResourcesBundle;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
@@ -123,6 +124,16 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 	}
 	
 	@Override
+	public WebResourcesBundle getParent() {
+		return bundle;
+	}
+	
+	@Override
+	public void setParent(WebRequestProcessor parent) {
+		throw new IllegalStateException("setParent cannot be called on a web service provider");
+	}
+	
+	@Override
 	public String getServiceTypeName() {
 		return "SOAP";
 	}
@@ -184,7 +195,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 
 	@SuppressWarnings("resource")
 	@Override
-	public ISynchronizationPoint<?> process(Object fromCheck, WebRequest request, WebResourcesBundle bundle) {
+	public ISynchronizationPoint<?> process(Object fromCheck, WebRequest request) {
 		if (!(fromCheck instanceof Operation))
 			return processDocRequest(request);
 		Operation op = (Operation)fromCheck;
