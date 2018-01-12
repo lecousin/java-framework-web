@@ -30,6 +30,7 @@
 	</bundle>
 	<bundle path="services">
 		<custom-filter class="net.lecousin.framework.web.services.soap.filters.GetAuthenticationRequestFromSOAPHeader"/>
+		<custom-filter class="net.lecousin.framework.web.test.TestSoapFilter"/>
 		<service class="net.lecousin.framework.web.test.TestRestService"/>
 		<service class="net.lecousin.framework.web.test.TestSoapService"/>
 		<processor path="" class="net.lecousin.framework.web.services.doc.WebServicesDocumentation"/>

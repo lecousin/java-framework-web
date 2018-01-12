@@ -67,9 +67,21 @@ public final class SOAPClient {
 		return send(url, action, request, namespaceURI, responseType, namespaceURI, rules);
 	}
 	
+	public static <T> AsyncWork<Pair<T, HTTPResponse>, Exception> sendAndGetHTTPResponse(String url, String action, Object request, String namespaceURI, Class<T> responseType, List<SerializationRule> rules) {
+		return sendAndGetHTTPResponse(url, action, request, namespaceURI, responseType, namespaceURI, rules);
+	}
+	
 	public static <T> AsyncWork<T, Exception> send(String url, String action, Object request, String requestNamespaceURI, Class<T> responseType, String responseNamespaceURI, List<SerializationRule> rules) {
 		try {
 			return send(url, action, createMessage(request, requestNamespaceURI), responseType, responseNamespaceURI, rules);
+		} catch (Exception e) {
+			return new AsyncWork<>(null, e);
+		}
+	}
+	
+	public static <T> AsyncWork<Pair<T, HTTPResponse>, Exception> sendAndGetHTTPResponse(String url, String action, Object request, String requestNamespaceURI, Class<T> responseType, String responseNamespaceURI, List<SerializationRule> rules) {
+		try {
+			return sendAndGetHTTPResponse(url, action, createMessage(request, requestNamespaceURI), responseType, responseNamespaceURI, rules);
 		} catch (Exception e) {
 			return new AsyncWork<>(null, e);
 		}
@@ -80,6 +92,14 @@ public final class SOAPClient {
 			return send(url, action, createMessage(request, defaultNamespaceURI), responseToFill, rules);
 		} catch (Exception e) {
 			return new SynchronizationPoint<>(e);
+		}
+	}
+	
+	public static AsyncWork<HTTPResponse, Exception> sendAndGetHTTPResponse(String url, String action, Object request, String defaultNamespaceURI, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
+		try {
+			return sendAndGetHTTPResponse(url, action, createMessage(request, defaultNamespaceURI), responseToFill, rules);
+		} catch (Exception e) {
+			return new AsyncWork<>(null, e);
 		}
 	}
 	
@@ -99,8 +119,28 @@ public final class SOAPClient {
 		return result;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public static <T> AsyncWork<Pair<T, HTTPResponse>, Exception> sendAndGetHTTPResponse(String url, String action, SOAPMessageContent message, Class<T> responseType, String responseNamespaceURI, List<SerializationRule> rules) {
+		SOAPMessageContent responseToFill = new SOAPMessageContent();
+		if (responseType != null) {
+			responseToFill.bodyNamespaceURI = responseNamespaceURI;
+			responseToFill.bodyLocalName = responseType.getSimpleName();
+			responseToFill.bodyType = new TypeDefinition(responseType);
+		}
+		AsyncWork<HTTPResponse, Exception> send = sendAndGetHTTPResponse(url, action, createEntity(message, rules), responseToFill, rules);
+		AsyncWork<Pair<T, HTTPResponse>, Exception> result = new AsyncWork<>();
+		send.listenInline(() -> {
+			result.unblockSuccess(new Pair<>((T)responseToFill.bodyContent, send.getResult()));
+		}, result);
+		return result;
+	}
+	
 	public static SynchronizationPoint<Exception> send(String url, String action, SOAPMessageContent message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
 		return send(url, action, createEntity(message, rules), responseToFill, rules);
+	}
+	
+	public static AsyncWork<HTTPResponse, Exception> sendAndGetHTTPResponse(String url, String action, SOAPMessageContent message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
+		return sendAndGetHTTPResponse(url, action, createEntity(message, rules), responseToFill, rules);
 	}
 	
 	public static SynchronizationPoint<Exception> send(String url, String action, MimeEntity message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
@@ -108,6 +148,17 @@ public final class SOAPClient {
 		SynchronizationPoint<Exception> result = new SynchronizationPoint<>();
 		send.listenAsync(new Task.Cpu.FromRunnable("Parsing SOAP response", Task.PRIORITY_NORMAL, () -> {
 			parseResponse(send.getResult().getValue1(), send.getResult().getValue2(), responseToFill, rules, result);
+		}), result);
+		return result;
+	}
+	
+	public static AsyncWork<HTTPResponse, Exception> sendAndGetHTTPResponse(String url, String action, MimeEntity message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
+		AsyncWork<Pair<HTTPResponse, IO.Readable.Seekable>, Exception> send = send(url, action, message);
+		AsyncWork<HTTPResponse, Exception> result = new AsyncWork<>();
+		SynchronizationPoint<Exception> sp = new SynchronizationPoint<>();
+		send.listenAsync(new Task.Cpu.FromRunnable("Parsing SOAP response", Task.PRIORITY_NORMAL, () -> {
+			parseResponse(send.getResult().getValue1(), send.getResult().getValue2(), responseToFill, rules, sp);
+			sp.listenInline(() -> { result.unblockSuccess(send.getResult().getValue1()); }, result);
 		}), result);
 		return result;
 	}
@@ -311,8 +362,8 @@ public final class SOAPClient {
 			if (!xml.event.localName.equals("Body")) {
 				result.error(new Exception("Error parsing SOAP response: Unexpected element " + xml.event.localName + ", Body expected"));
 				return;
-			} else
-				parseBody(xml, toFill, rules, result);
+			}
+			parseBody(xml, toFill, rules, result);
 		}), true);
 
 	}

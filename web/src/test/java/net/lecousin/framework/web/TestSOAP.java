@@ -13,52 +13,24 @@ import com.eviware.soapui.impl.wsdl.WsdlSubmit;
 import com.eviware.soapui.impl.wsdl.WsdlSubmitContext;
 import com.eviware.soapui.model.iface.Response;
 
-import net.lecousin.framework.application.LCCore;
-import net.lecousin.framework.concurrent.Task;
-import net.lecousin.framework.concurrent.synch.AsyncWork;
-import net.lecousin.framework.core.test.LCCoreAbstractTest;
 import net.lecousin.framework.io.serialization.TypeDefinition;
+import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.exception.HTTPResponseError;
-import net.lecousin.framework.network.session.SessionInMemory;
+import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.web.security.LoginRequest;
 import net.lecousin.framework.web.services.soap.SOAPClient;
 import net.lecousin.framework.web.services.soap.SOAPMessageContent;
 import net.lecousin.framework.web.test.TestSoapService;
 import net.lecousin.framework.web.test.TestSoapService.TestMyHeader;
 import net.lecousin.framework.xml.dom.DOMUtil;
-import net.lecousin.framework.xml.serialization.XMLDeserializer;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public class TestSOAP extends LCCoreAbstractTest {
+public class TestSOAP extends AbstractTest {
 
-	private static WebServer server;
-	
-	@BeforeClass
-	public static void initLogging(){
-		LCCore.getApplication().getLoggerFactory().configure("classpath:test-webserver/logging.xml");		
-	}
-
-	@BeforeClass
-	public static void startServer() throws Exception {
-		AsyncWork<WebServerConfig, Exception> loadConfig = XMLDeserializer.deserializeResource("test-webserver/server.xml", WebServerConfig.class, Task.PRIORITY_NORMAL);
-		loadConfig.block(0);
-		if (loadConfig.hasError())
-			throw loadConfig.getError();
-		server = new WebServer(null, new SessionInMemory(), 10 * 60 * 1000, true);
-		server.setConfiguration(loadConfig.getResult());
-	}
-	
-	@AfterClass
-	public static void stopServer() {
-		server.close();
-	}
-	
 	@Test(timeout=120000)
 	public void testSOAPHelloWorld() throws Exception {
 		TestSoapService.TestRequest req = new TestSoapService.TestRequest();
@@ -133,6 +105,11 @@ public class TestSOAP extends LCCoreAbstractTest {
 		
 		TestSoapService.TestResult response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello Test2, This is a test with header, this is custom", response.hello);
+		
+		Pair<TestSoapService.TestResult, HTTPResponse> resp = SOAPClient.sendAndGetHTTPResponse("http://localhost:1080/my_context/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		Assert.assertEquals("Hello Test2, This is a test with header, this is custom", resp.getValue1().hello);
+		Assert.assertEquals("true", resp.getValue2().getMIME().getHeaderSingleValue("X-SOAP-PreFiltered"));
+		Assert.assertEquals("true", resp.getValue2().getMIME().getHeaderSingleValue("X-SOAP-PostFiltered"));
 	}
 
 	@Test(timeout=120000)

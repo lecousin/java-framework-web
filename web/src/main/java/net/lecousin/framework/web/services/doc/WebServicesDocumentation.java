@@ -14,7 +14,8 @@ import net.lecousin.framework.concurrent.synch.SynchronizationPoint;
 import net.lecousin.framework.exception.NoException;
 import net.lecousin.framework.io.IO;
 import net.lecousin.framework.io.IOUtil;
-import net.lecousin.framework.io.out2in.OutputToInputBuffers;
+import net.lecousin.framework.io.buffering.MemoryIO;
+import net.lecousin.framework.io.out2in.OutputToInput;
 import net.lecousin.framework.io.serialization.annotations.Transient;
 import net.lecousin.framework.network.http.HTTPRequest.Method;
 import net.lecousin.framework.util.Pair;
@@ -76,6 +77,7 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			while (p != null && !(p instanceof WebResourcesBundle))
 				p = p.getParent();
 			if (p == null) {
+				request.getResponse().setStatus(200);
 				request.getResponse().setContentType("text/html;charset=utf-8");
 				request.getResponse().getMIME().setBodyToSend(LCCore.getApplication().getResource("net.lecousin.framework.web/services-doc/no-service.html", Task.PRIORITY_NORMAL));
 				sp.unblock();
@@ -84,6 +86,7 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			LinkedList<Pair<String, WebServiceProvider>> services = new LinkedList<>();
 			searchServices((WebResourcesBundle)p, "", services);
 			if (services.isEmpty()) {
+				request.getResponse().setStatus(200);
 				request.getResponse().setContentType("text/html;charset=utf-8");
 				request.getResponse().getMIME().setBodyToSend(LCCore.getApplication().getResource("net.lecousin.framework.web/services-doc/no-service.html", Task.PRIORITY_NORMAL));
 				sp.unblock();
@@ -134,15 +137,18 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			new Task.Cpu.FromRunnable("Generate web services documentation", Task.PRIORITY_NORMAL, () -> {
 				if (sp.isCancelled()) return;
 				if (read.hasError()) {
+					LCCore.getApplication().getDefaultLogger().error("Error reading web services doc template", read.getError());
 					request.getResponse().setStatus(500);
 					sp.unblock();
 					return;
 				}
 				UnprotectedStringBuffer text = read.getResult();
 				ctx.generate(text);
-				OutputToInputBuffers o2i = new OutputToInputBuffers(false, 10, Task.PRIORITY_NORMAL);
+				MemoryIO out = new MemoryIO(4096, "web services doc");
+				OutputToInput o2i = new OutputToInput(out, "web services doc");
 				text.encode(StandardCharsets.UTF_8, o2i, Task.PRIORITY_NORMAL).listenInline(() -> { o2i.endOfData(); });
 				request.getResponse().getMIME().setBodyToSend(o2i);
+				request.getResponse().setStatus(200);
 				sp.unblock();
 			}).startOn(read.getOutput(), true);
 			return null;

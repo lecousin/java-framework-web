@@ -863,7 +863,23 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 		// call post-filters
 		for (Pair<SOAPFilter, Method> filter : postFilters) {
 			try {
-				filter.getValue2().invoke(filter.getValue1(), response);
+				Class<?>[] types = filter.getValue2().getParameterTypes();
+				Object[] params = new Object[types.length];
+				for (int i = 0; i < types.length; ++i) {
+					if (types[i].isAssignableFrom(WebRequest.class))
+						params[i] = request;
+					else if (types[i].isAssignableFrom(HTTPRequest.class))
+						params[i] = request.getRequest();
+					else if (types[i].isAssignableFrom(HTTPResponse.class))
+						params[i] = request.getResponse();
+					else if (types[i].isAssignableFrom(Session.class))
+						params[i] = request.getSession(false);
+					else if (types[i].isAssignableFrom(TCPServerClient.class))
+						params[i] = request.getClient();
+					else if (types[i].isAssignableFrom(SOAPMessageContent.class))
+						params[i] = response;
+				}
+				filter.getValue2().invoke(filter.getValue1(), params);
 			} catch (Throwable t) {
 				logger.error("Error in SOAP post-filter " + filter.getValue1(), t);
 				internalError("Error in SOAP post-filter", request);
