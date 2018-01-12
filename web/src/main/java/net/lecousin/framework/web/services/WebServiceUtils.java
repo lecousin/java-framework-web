@@ -17,8 +17,12 @@ import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.web.WebResourcesBundle;
 
-public class WebServiceUtils {
+/** Utility methods for web services. */
+public final class WebServiceUtils {
 	
+	private WebServiceUtils() { /* no instance */ }
+	
+	/** Instantiate an object for the given type, by parsing the query parameter given in <code>name</code>. */
 	public static Object fillFromParameter(String name, Class<?> type, HTTPRequest request) throws Exception {
 		String value = request.getParameter(name);
 		if (value == null)
@@ -31,40 +35,40 @@ public class WebServiceUtils {
 				return Boolean.TRUE;
 			if (s.equals("false") || s.equals("no") || s.equals("off") || s.equals("0"))
 				return Boolean.FALSE;
-			throw new Exception("Invalid boolean value for parameter "+name+": "+value);
+			throw new Exception("Invalid boolean value for parameter " + name + ": " + value);
 		}
 		
 		if (byte.class.equals(type) || Byte.class.equals(type)) {
 			try { return new Byte(Byte.parseByte(value)); }
-			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter "+name+": "+value); }
+			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter " + name + ": " + value); }
 		}
 		if (short.class.equals(type) || Short.class.equals(type)) {
 			try { return new Short(Short.parseShort(value)); }
-			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter "+name+": "+value); }
+			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter " + name + ": " + value); }
 		}
 		if (int.class.equals(type) || Integer.class.equals(type)) {
 			try { return new Integer(Integer.parseInt(value)); }
-			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter "+name+": "+value); }
+			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter " + name + ": " + value); }
 		}
 		if (long.class.equals(type) || Long.class.equals(type)) {
 			try { return new Long(Long.parseLong(value)); }
-			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter "+name+": "+value); }
+			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter " + name + ": " + value); }
 		}
 		if (BigInteger.class.equals(type)) {
 			try { return new BigInteger(value); }
-			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter "+name+": "+value); }
+			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter " + name + ": " + value); }
 		}
 		if (float.class.equals(type) || Float.class.equals(type)) {
 			try { return new Float(Float.parseFloat(value)); }
-			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter "+name+": "+value); }
+			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter " + name + ": " + value); }
 		}
 		if (double.class.equals(type) || Double.class.equals(type)) {
 			try { return new Double(Double.parseDouble(value)); }
-			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter "+name+": "+value); }
+			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter " + name + ": " + value); }
 		}
 		if (BigDecimal.class.equals(type)) {
 			try { return new BigDecimal(value); }
-			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter "+name+": "+value); }
+			catch (NumberFormatException ex) { throw new Exception("Invalid value for parameter " + name + ": " + value); }
 		}
 		if (String.class.equals(type)) {
 			return value;
@@ -72,13 +76,16 @@ public class WebServiceUtils {
 		if (Character.class.equals(type) || char.class.equals(type)) {
 			if (value.length() == 1)
 				return new Character(value.charAt(0));
-			throw new Exception("Invalid value for parameter "+name+": "+value);
+			throw new Exception("Invalid value for parameter " + name + ": " + value);
 		}
-		throw new Exception("Parameter type "+type.getName()+" is not supported");
+		throw new Exception("Parameter type " + type.getName() + " is not supported");
 	}
 	
+	/** Deserialize the given type from the body of the request. */
 	@SuppressWarnings("resource")
-	public static AsyncWork<?, Exception> fillFromBody(Class<?> type, ParameterizedType ptype, HTTPRequest request, WebResourcesBundle bundle) throws Exception {
+	public static AsyncWork<?, Exception> fillFromBody(
+		Class<?> type, ParameterizedType ptype, HTTPRequest request, WebResourcesBundle bundle
+	) throws Exception {
 		IO.Readable.Seekable body = (IO.Readable.Seekable)request.getMIME().getBodyOutputAsInput();
 		if (body == null)
 			throw new Exception("No data received");

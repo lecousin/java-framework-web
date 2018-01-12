@@ -11,13 +11,18 @@ public interface WebServiceProvider extends WebRequestProcessor {
 	@Override
 	public WebResourcesBundle getParent();
 	
+	/** Type of web service, for documentation purpose. */
 	public String getServiceTypeName();
 	
+	/** Default path of the service, if not specified in the configuration. */
 	public String getDefaultPath();
+	
+	/** Web service instance. */
 	public Object getWebService();
 	
 	/** Describe an operation, for documentation. */
 	public static class OperationDescription {
+		/** Constructor. */
 		public OperationDescription(String name, String description) {
 			this.name = name;
 			this.description = description;
@@ -36,6 +41,7 @@ public interface WebServiceProvider extends WebRequestProcessor {
 	
 	/** Describe a specification of the service. */
 	public static class WebServiceSpecification {
+		/** Constructor. */
 		public WebServiceSpecification(String name, String path) {
 			this.name = name;
 			this.path = path;
