@@ -12,17 +12,14 @@
   	<dependency>
   		<groupId>net.lecousin.framework.network</groupId>
   		<artifactId>http</artifactId>
-  		<version>0.2.1</version>
   	</dependency>
   	<dependency>
   		<groupId>net.lecousin.framework</groupId>
   		<artifactId>injection</artifactId>
-  		<version>0.1.0</version>
   	</dependency>
   	<dependency>
   		<groupId>net.lecousin.framework</groupId>
   		<artifactId>json</artifactId>
-  		<version>0.1.0</version>
   	</dependency>
   	<dependency>
   		<groupId>net.lecousin</groupId>
@@ -41,5 +38,25 @@
   		<artifactId>junit</artifactId>
   		<scope>test</scope>
   	</dependency>
+  	<dependency>
+  		<groupId>com.smartbear.soapui</groupId>
+  		<artifactId>soapui</artifactId>
+  		<version>5.3.0</version>
+  		<scope>test</scope>
+  		<exclusions>
+  			<exclusion>
+  				<groupId>javafx</groupId>
+  				<artifactId>jfxrt</artifactId>
+  			</exclusion>
+  		</exclusions>
+  	</dependency>
   </dependencies>
+  
+  <!-- Repository for tests with SOAPUI -->
+  <repositories>
+  	<repository>
+  		<id>maven2</id>
+  		<url>http://smartbearsoftware.com/repository/maven2</url>
+  	</repository>
+  </repositories>
 </project>

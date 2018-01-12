@@ -254,7 +254,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 			run.run();
 			return null;
 		}
-	};
+	}
 	
 	private void processOperation(Operation op, XMLStreamReaderAsync xml, WebRequest request, SynchronizationPoint<Exception> sp) {
 		if (sp.isCancelled()) return;
@@ -267,7 +267,9 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 				return;
 			}
 			if (!xml.event.localName.equals("Envelope") || !xml.getNamespaceURI(xml.event.namespacePrefix).equals(SOAPUtil.SOAP_NS)) {
-				error(400, "Root element must be an Envelope in namespace " + SOAPUtil.SOAP_NS, false, request);
+				error(400, "Root element must be an Envelope in namespace " + SOAPUtil.SOAP_NS +
+					", found is " + xml.event.localName + " in namespace "
+					+ xml.getNamespaceURI(xml.event.namespacePrefix), false, request);
 				sp.unblock();
 				return;
 			}

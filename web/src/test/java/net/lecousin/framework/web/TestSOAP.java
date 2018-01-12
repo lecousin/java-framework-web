@@ -4,6 +4,15 @@ import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import com.eviware.soapui.impl.WsdlInterfaceFactory;
+import com.eviware.soapui.impl.wsdl.WsdlInterface;
+import com.eviware.soapui.impl.wsdl.WsdlOperation;
+import com.eviware.soapui.impl.wsdl.WsdlProject;
+import com.eviware.soapui.impl.wsdl.WsdlRequest;
+import com.eviware.soapui.impl.wsdl.WsdlSubmit;
+import com.eviware.soapui.impl.wsdl.WsdlSubmitContext;
+import com.eviware.soapui.model.iface.Response;
+
 import net.lecousin.framework.application.LCCore;
 import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.synch.AsyncWork;
@@ -299,6 +308,22 @@ public class TestSOAP extends LCCoreAbstractTest {
 		} catch (HTTPResponseError e) {
 			Assert.assertEquals(403, e.getStatusCode());
 		}
+	}
+	
+	@Test(timeout=120000)
+	public void testWithSOAPUIFromWSDL() throws Exception {
+		WsdlProject project = new WsdlProject();
+		WsdlInterface iface = WsdlInterfaceFactory.importWsdl(project, "http://localhost:1080/my_context/services/testSoap/wsdl", true )[0];
+		WsdlOperation operation = (WsdlOperation) iface.getOperationByName("helloWorld");
+		WsdlRequest request = operation.addNewRequest("My request");
+		request.setRequestContent(operation.createRequest(true));
+		request.setEndpoint("http://localhost:1080/my_context/services/testSoap");
+		WsdlSubmit submit = (WsdlSubmit) request.submit(new WsdlSubmitContext(iface), false);
+		Response response = submit.getResponse();
+		String content = response.getContentAsString();
+		if (content.contains("hello=\"Hello ?\"")) return;
+		System.out.println(response.getContentAsString());
+		throw new Exception("Invalid SOAP response");
 	}
 	
 }
