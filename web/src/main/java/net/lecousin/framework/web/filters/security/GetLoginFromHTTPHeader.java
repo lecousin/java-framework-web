@@ -5,7 +5,6 @@ import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestFilter;
 import net.lecousin.framework.web.security.LoginRequest;
 
-//skip checkstyle: AbbreviationAsWordInName
 /**
  * Retrieve username and password from HTTP headers.
  * The headers to use can be specified in the fields <code>usernameHeader</code>

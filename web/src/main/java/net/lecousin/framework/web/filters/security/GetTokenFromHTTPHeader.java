@@ -5,7 +5,6 @@ import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestFilter;
 import net.lecousin.framework.web.security.TokenRequest;
 
-//skip checkstyle: AbbreviationAsWordInName
 /**
 * Retrieve an authentication token from HTTP headers.
 * The header to use can be specified in the field <code>tokenHeader</code>.
