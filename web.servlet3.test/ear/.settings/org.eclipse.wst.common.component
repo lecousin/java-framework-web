@@ -74,7 +74,7 @@
         <dependent-module archiveName="core.javaee-0.9.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="core-0.9.13.jar" deploy-path="/" handle="module:/resource/net.lecousin.core/net.lecousin.core">
+        <dependent-module archiveName="core-0.9.14.jar" deploy-path="/" handle="module:/resource/net.lecousin.core/net.lecousin.core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="spotbugs-annotations-3.1.1.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/github/spotbugs/spotbugs-annotations/3.1.1/spotbugs-annotations-3.1.1.jar">
