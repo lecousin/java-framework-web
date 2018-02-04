@@ -3,7 +3,6 @@ package net.lecousin.framework.web.services.soap;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
-import java.util.Map;
 
 import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.synch.AsyncWork;
@@ -16,8 +15,8 @@ import net.lecousin.framework.io.serialization.rules.SerializationRule;
 import net.lecousin.framework.network.http.HTTPRequest.Method;
 import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.client.HTTPClientUtil;
-import net.lecousin.framework.network.mime.entity.BinaryMimeEntity;
-import net.lecousin.framework.network.mime.entity.MimeEntity;
+import net.lecousin.framework.network.mime.MimeMessage;
+import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
 import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.xml.XMLStreamEvents.ElementContext;
 import net.lecousin.framework.xml.XMLStreamEvents.Event;
@@ -55,12 +54,14 @@ public final class SOAPClient {
 	}
 	
 	@SuppressWarnings("resource")
-	public static MimeEntity createEntity(SOAPMessageContent message, List<SerializationRule> rules) {
+	public static MimeMessage createMimeMessage(SOAPMessageContent message, List<SerializationRule> rules) {
 		OutputToInputBuffers o2i = new OutputToInputBuffers(false, Task.PRIORITY_NORMAL);
 		SOAPUtil.sendMessage(message, o2i, rules);
-		BinaryMimeEntity entity = new BinaryMimeEntity("application/soap+xml; charset=utf-8", o2i);
+		MimeMessage mime = new MimeMessage();
+		mime.setHeaderRaw(MimeMessage.CONTENT_TYPE, "application/soap+xml; charset=utf-8");
+		mime.setBodyToSend(o2i);
 		// TODO check the HTTP client closes the body when sent or error
-		return entity;
+		return mime;
 	}
 	
 	public static <T> AsyncWork<T, Exception> send(String url, String action, Object request, String namespaceURI, Class<T> responseType, List<SerializationRule> rules) {
@@ -111,7 +112,7 @@ public final class SOAPClient {
 			responseToFill.bodyLocalName = responseType.getSimpleName();
 			responseToFill.bodyType = new TypeDefinition(responseType);
 		}
-		SynchronizationPoint<Exception> send = send(url, action, createEntity(message, rules), responseToFill, rules);
+		SynchronizationPoint<Exception> send = send(url, action, createMimeMessage(message, rules), responseToFill, rules);
 		AsyncWork<T, Exception> result = new AsyncWork<>();
 		send.listenInline(() -> {
 			result.unblockSuccess((T)responseToFill.bodyContent);
@@ -127,7 +128,7 @@ public final class SOAPClient {
 			responseToFill.bodyLocalName = responseType.getSimpleName();
 			responseToFill.bodyType = new TypeDefinition(responseType);
 		}
-		AsyncWork<HTTPResponse, Exception> send = sendAndGetHTTPResponse(url, action, createEntity(message, rules), responseToFill, rules);
+		AsyncWork<HTTPResponse, Exception> send = sendAndGetHTTPResponse(url, action, createMimeMessage(message, rules), responseToFill, rules);
 		AsyncWork<Pair<T, HTTPResponse>, Exception> result = new AsyncWork<>();
 		send.listenInline(() -> {
 			result.unblockSuccess(new Pair<>((T)responseToFill.bodyContent, send.getResult()));
@@ -136,14 +137,14 @@ public final class SOAPClient {
 	}
 	
 	public static SynchronizationPoint<Exception> send(String url, String action, SOAPMessageContent message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
-		return send(url, action, createEntity(message, rules), responseToFill, rules);
+		return send(url, action, createMimeMessage(message, rules), responseToFill, rules);
 	}
 	
 	public static AsyncWork<HTTPResponse, Exception> sendAndGetHTTPResponse(String url, String action, SOAPMessageContent message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
-		return sendAndGetHTTPResponse(url, action, createEntity(message, rules), responseToFill, rules);
+		return sendAndGetHTTPResponse(url, action, createMimeMessage(message, rules), responseToFill, rules);
 	}
 	
-	public static SynchronizationPoint<Exception> send(String url, String action, MimeEntity message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
+	public static SynchronizationPoint<Exception> send(String url, String action, MimeMessage message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
 		AsyncWork<Pair<HTTPResponse, IO.Readable.Seekable>, Exception> send = send(url, action, message);
 		SynchronizationPoint<Exception> result = new SynchronizationPoint<>();
 		send.listenAsync(new Task.Cpu.FromRunnable("Parsing SOAP response", Task.PRIORITY_NORMAL, () -> {
@@ -152,7 +153,7 @@ public final class SOAPClient {
 		return result;
 	}
 	
-	public static AsyncWork<HTTPResponse, Exception> sendAndGetHTTPResponse(String url, String action, MimeEntity message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
+	public static AsyncWork<HTTPResponse, Exception> sendAndGetHTTPResponse(String url, String action, MimeMessage message, SOAPMessageContent responseToFill, List<SerializationRule> rules) {
 		AsyncWork<Pair<HTTPResponse, IO.Readable.Seekable>, Exception> send = send(url, action, message);
 		AsyncWork<HTTPResponse, Exception> result = new AsyncWork<>();
 		SynchronizationPoint<Exception> sp = new SynchronizationPoint<>();
@@ -163,10 +164,11 @@ public final class SOAPClient {
 		return result;
 	}
 	
-	public static AsyncWork<Pair<HTTPResponse, IO.Readable.Seekable>, Exception> send(String url, String action, MimeEntity message) {
+	public static AsyncWork<Pair<HTTPResponse, IO.Readable.Seekable>, Exception> send(String url, String action, MimeMessage message) {
 		AsyncWork<Pair<HTTPResponse, IO.Readable.Seekable>, Exception> result = new AsyncWork<>();
 		try {
-			AsyncWork<Pair<HTTPResponse, IO.Readable.Seekable>, IOException> send = HTTPClientUtil.sendAndReceive(Method.POST, url, message, "SOAPAction", action);
+			message.setHeaderRaw("SOAPAction", action);
+			AsyncWork<Pair<HTTPResponse, IO.Readable.Seekable>, IOException> send = HTTPClientUtil.sendAndReceive(Method.POST, url, message);
 			send.listenInlineSP(() -> { result.unblockSuccess(send.getResult()); }, result);
 		} catch (Exception e) {
 			result.error(e);
@@ -176,14 +178,14 @@ public final class SOAPClient {
 	
 	public static void parseResponse(HTTPResponse response, IO.Readable content, SOAPMessageContent toFill, List<SerializationRule> rules, SynchronizationPoint<Exception> result) {
 		String encoding = null;
-		Pair<String, Map<String, String>> contentType;
-		try { contentType = response.getMIME().parseContentType(); }
+		ParameterizedHeaderValue contentType;
+		try { contentType = response.getMIME().getContentType(); }
 		catch (Exception e) {
 			result.error(new Exception("Invalid content-type", e));
 			return;
 		}
 		if (contentType != null) {
-			encoding = contentType.getValue2().get("charset");
+			encoding = contentType.getParameterIgnoreCase("charset");
 		}
 		XMLStreamReaderAsync xml = new XMLStreamReaderAsync(content, Charset.forName(encoding), 4096);
 		ISynchronizationPoint<Exception> start = xml.startRootElement();

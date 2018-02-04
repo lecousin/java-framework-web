@@ -114,8 +114,8 @@ public class TestSOAP extends AbstractTest {
 		
 		Pair<TestSoapService.TestResult, HTTPResponse> resp = SOAPClient.sendAndGetHTTPResponse("http://localhost:1080/my_context/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello Test2, This is a test with header, this is custom", resp.getValue1().hello);
-		Assert.assertEquals("true", resp.getValue2().getMIME().getHeaderSingleValue("X-SOAP-PreFiltered"));
-		Assert.assertEquals("true", resp.getValue2().getMIME().getHeaderSingleValue("X-SOAP-PostFiltered"));
+		Assert.assertEquals("true", resp.getValue2().getMIME().getFirstHeaderRawValue("X-SOAP-PreFiltered"));
+		Assert.assertEquals("true", resp.getValue2().getMIME().getFirstHeaderRawValue("X-SOAP-PostFiltered"));
 	}
 
 	@Test(timeout=120000)

@@ -90,7 +90,7 @@ public class WebRequest {
 		StringBuilder url = new StringBuilder();
 		url.append("http");
 		if (isSecure()) url.append('s');
-		url.append("://").append(request.getMIME().getHeaderSingleValue(HTTPRequest.HEADER_HOST));
+		url.append("://").append(request.getMIME().getFirstHeaderRawValue(HTTPRequest.HEADER_HOST));
 		return url.toString();
 	}
 	

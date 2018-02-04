@@ -85,7 +85,7 @@ final class WSDLGenerator {
 		wsdl.append("</wsdl:service>");
 		wsdl.append("</wsdl:definitions>");
 		request.getResponse().setStatus(200);
-		request.getResponse().setContentType("text/xml; charset=utf-8");
+		request.getResponse().setRawContentType("text/xml; charset=utf-8");
 		request.getResponse().getMIME().setBodyToSend(new ByteArrayIO(wsdl.toString().getBytes(StandardCharsets.UTF_8), "wsdl"));
 		return new SynchronizationPoint<>(true);
 	}

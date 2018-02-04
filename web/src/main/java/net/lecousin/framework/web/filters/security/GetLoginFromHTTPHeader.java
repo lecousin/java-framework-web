@@ -1,6 +1,7 @@
 package net.lecousin.framework.web.filters.security;
 
 import net.lecousin.framework.concurrent.synch.AsyncWork;
+import net.lecousin.framework.network.mime.MimeUtil;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestFilter;
 import net.lecousin.framework.web.security.LoginRequest;
@@ -19,11 +20,15 @@ public class GetLoginFromHTTPHeader implements WebRequestFilter {
 	
 	@Override
 	public AsyncWork<FilterResult, Exception> filter(WebRequest request) {
-		String username = request.getRequest().getHeader(usernameHeader);
+		String username = request.getRequest().getMIME().getFirstHeaderRawValue(usernameHeader);
 		if (username == null)
 			return new AsyncWork<>(FilterResult.CONTINUE_PROCESSING, null);
-		String password = request.getRequest().getHeader(passwordHeader);
+		String password = request.getRequest().getMIME().getFirstHeaderRawValue(passwordHeader);
 		if (password == null) password = "";
+		try { username = MimeUtil.decodeRFC2047(username); }
+		catch (Throwable t) { /* ignore */ }
+		try { password = MimeUtil.decodeRFC2047(password); }
+		catch (Throwable t) { /* ignore */ }
 		request.addAuthenticationRequest(new LoginRequest(username, password));
 		return new AsyncWork<>(FilterResult.CONTINUE_PROCESSING, null);
 	}

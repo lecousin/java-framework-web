@@ -2,8 +2,6 @@ package net.lecousin.framework.web.servlet3;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
-import java.util.Map;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.Servlet;
@@ -28,6 +26,7 @@ import net.lecousin.framework.network.http.HTTPRequest.Method;
 import net.lecousin.framework.network.http.HTTPRequest.Protocol;
 import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.exception.HTTPError;
+import net.lecousin.framework.network.mime.MimeHeader;
 import net.lecousin.framework.network.session.ISession;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebResourcesBundle;
@@ -86,7 +85,7 @@ public class WebResourcesBundleServlet implements Servlet {
 		req.setProtocol(Protocol.from(request.getProtocol()));
 		for (String name : CollectionsUtil.singleTimeIterable(request.getHeaderNames())) {
 			for (String value : CollectionsUtil.singleTimeIterable(request.getHeaders(name)))
-				req.getMIME().addHeaderValue(name, value);
+				req.getMIME().addHeaderRaw(name, value);
 		}
 		req.setAttribute(ATTRIBUTE_HTTPSERVLETREQUEST, request);
 		
@@ -126,10 +125,9 @@ public class WebResourcesBundleServlet implements Servlet {
 							return;
 						}
 						response.setStatus(resp.getStatusCode());
-						for (Map.Entry<String, List<String>> e : resp.getMIME().getHeaders().entrySet())
-							for (String val : e.getValue())
-								response.addHeader(e.getKey(), val);
-						IO.Readable body = resp.getMIME().getBodyInput();
+						for (MimeHeader h : resp.getMIME().getHeaders())
+							response.addHeader(h.getName(), h.getRawValue());
+						IO.Readable body = resp.getMIME().getBodyToSend();
 						if (body == null) {
 							ctx.complete();
 							return;

@@ -78,7 +78,7 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 				p = p.getParent();
 			if (p == null) {
 				request.getResponse().setStatus(200);
-				request.getResponse().setContentType("text/html;charset=utf-8");
+				request.getResponse().setRawContentType("text/html;charset=utf-8");
 				request.getResponse().getMIME().setBodyToSend(LCCore.getApplication().getResource("net.lecousin.framework.web/services-doc/no-service.html", Task.PRIORITY_NORMAL));
 				sp.unblock();
 				return null;
@@ -87,13 +87,13 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			searchServices((WebResourcesBundle)p, "", services);
 			if (services.isEmpty()) {
 				request.getResponse().setStatus(200);
-				request.getResponse().setContentType("text/html;charset=utf-8");
+				request.getResponse().setRawContentType("text/html;charset=utf-8");
 				request.getResponse().getMIME().setBodyToSend(LCCore.getApplication().getResource("net.lecousin.framework.web/services-doc/no-service.html", Task.PRIORITY_NORMAL));
 				sp.unblock();
 				return null;
 			}
 
-			request.getResponse().setContentType("text/html;charset=utf-8");
+			request.getResponse().setRawContentType("text/html;charset=utf-8");
 			IO.Readable io = LCCore.getApplication().getResource("net.lecousin.framework.web/services-doc/services-template.html", Task.PRIORITY_NORMAL);
 			Task<UnprotectedStringBuffer,IOException> read = IOUtil.readFullyAsString(io, StandardCharsets.UTF_8, Task.PRIORITY_NORMAL);
 			read.getOutput().listenInline(() -> { io.closeAsync(); });

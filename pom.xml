@@ -34,12 +34,12 @@
   		<dependency>
 	  		<groupId>net.lecousin</groupId>
 	  		<artifactId>core</artifactId>
-	  		<version>0.9.15</version>
+	  		<version>0.9.16</version>
   		</dependency>
   		<dependency>
 	  		<groupId>net.lecousin</groupId>
 	  		<artifactId>core</artifactId>
-	  		<version>0.9.15</version>
+	  		<version>0.9.16</version>
 	  		<type>test-jar</type>
   		</dependency>
 	  	<dependency>
@@ -50,17 +50,17 @@
 	  	<dependency>
 	  		<groupId>net.lecousin.framework.network</groupId>
 	  		<artifactId>core</artifactId>
-	  		<version>0.2.5</version>
+	  		<version>0.2.8</version>
 	  	</dependency>
 	  	<dependency>
 	  		<groupId>net.lecousin.framework.network</groupId>
 	  		<artifactId>mime</artifactId>
-	  		<version>0.2.1</version>
+	  		<version>0.3.0</version>
 	  	</dependency>
 	  	<dependency>
 	  		<groupId>net.lecousin.framework.network</groupId>
 	  		<artifactId>http</artifactId>
-	  		<version>0.2.1</version>
+	  		<version>0.3.0</version>
 	  	</dependency>
 	  	<dependency>
 	  		<groupId>net.lecousin.framework</groupId>

@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.synch.AsyncWork;
@@ -33,6 +32,9 @@ import net.lecousin.framework.json.JSONSerializer;
 import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.exception.HTTPResponseError;
+import net.lecousin.framework.network.mime.MimeHeader;
+import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
+import net.lecousin.framework.network.mime.header.ParameterizedHeaderValues;
 import net.lecousin.framework.network.server.TCPServerClient;
 import net.lecousin.framework.network.session.Session;
 import net.lecousin.framework.plugins.ExtensionPoints;
@@ -548,7 +550,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 			MemoryIO io = new MemoryIO(8192, "REST specification");
 			OutputToInput o2i = new OutputToInput(io, "REST specification");
 			request.getResponse().setStatus(200);
-			request.getResponse().setContentType(((RESTSpecificationPlugin)fromCheck).getContentType());
+			request.getResponse().setRawContentType(((RESTSpecificationPlugin)fromCheck).getContentType());
 			request.getResponse().getMIME().setBodyToSend(o2i);
 			((RESTSpecificationPlugin)fromCheck).generate(this, o2i, request).listenInline(() -> { o2i.endOfData(); });
 			return new SynchronizationPoint<>(true);
@@ -848,40 +850,45 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 		String responseType = null;
 		Serializer ser = null;
 		
-		String s = request.getRequest().getHeader("Accept");
-		if (s != null) {
-			String[] types = s.split(",");
-			for (String type : types) {
-				type = type.trim();
-				ser = bundle.getSerializer(type, StandardCharsets.UTF_8, expectedType.getBase());
-				if (ser != null) {
-					responseType = type + "; charset=utf-8";
-					break;
-				}
+		ParameterizedHeaderValues accept = new ParameterizedHeaderValues();
+		for (MimeHeader h : request.getRequest().getMIME().getHeaders("Accept")) {
+			try {
+				ParameterizedHeaderValues list = h.getValue(ParameterizedHeaderValues.class);
+				accept.getValues().addAll(list.getValues());
+			} catch (Throwable t) {
+				// ignore
+			}
+		}
+		for (ParameterizedHeaderValue acceptType : accept.getValues()) {
+			String type = acceptType.getMainValue();
+			ser = bundle.getSerializer(type, StandardCharsets.UTF_8, expectedType.getBase());
+			if (ser != null) {
+				responseType = type + "; charset=utf-8";
+				break;
 			}
 		}
 		if (ser == null) {
-			Pair<String, Map<String, String>> ct = null;
-			try { ct = request.getRequest().getMIME().parseContentType(); }
+			ParameterizedHeaderValue ct = null;
+			try { ct = request.getRequest().getMIME().getContentType(); }
 			catch (Throwable t) { /* ignore */ }
 			if (ct == null) {
 				responseType = "application/json; charset=utf-8";
 				ser = new JSONSerializer(StandardCharsets.UTF_8, 4096, false);
 			} else {
-				String cs = ct.getValue2().get("charset");
+				String cs = ct.getParameterIgnoreCase("charset");
 				Charset charset = null;
 				if (cs != null)
 					try { charset = Charset.forName(cs); }
 					catch (Throwable t) { /* ignore */ }
 				if (charset == null) charset = StandardCharsets.UTF_8;
-				ser = bundle.getSerializer(ct.getValue1(), charset, expectedType.getBase());
+				ser = bundle.getSerializer(ct.getMainValue(), charset, expectedType.getBase());
 				if (ser != null)
-					responseType = s;
+					responseType = ct.getMainValue() + "; charset=" + charset.name();
 			}
 		}
 		
 		if (ser == null) {
-			error(HttpURLConnection.HTTP_NOT_ACCEPTABLE, "Content type "+responseType+" is not supported for the response", request);
+			error(HttpURLConnection.HTTP_NOT_ACCEPTABLE, "Content type " + responseType + " is not supported for the response", request);
 			sp.unblock();
 			return;
 		}
@@ -889,7 +896,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 		if (sp.isCancelled()) return;
 		
 		request.getResponse().setStatus(200);
-		request.getResponse().setContentType(responseType);
+		request.getResponse().setRawContentType(responseType);
 		OutputToInputBuffers data = new OutputToInputBuffers(true, 10, Task.PRIORITY_NORMAL);
 		ISynchronizationPoint<Exception> serialization = ser.serialize(result, expectedType, data, bundle.getSerializationRules());
 		serialization.listenInline(new Runnable() {
@@ -911,7 +918,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 		try {
 			request.getResponse().setStatus(code);
 			if (message != null) {
-				request.getResponse().setContentType("text/plain;charset=utf-8");
+				request.getResponse().setRawContentType("text/plain;charset=utf-8");
 				request.getResponse().getMIME().setBodyToSend(new ByteArrayIO(message.getBytes(StandardCharsets.UTF_8), "Error message"));
 			}
 		} catch (Throwable t) { /* ignore */ }

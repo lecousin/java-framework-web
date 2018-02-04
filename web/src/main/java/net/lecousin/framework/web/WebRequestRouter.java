@@ -79,7 +79,7 @@ public class WebRequestRouter implements WebRequestProcessor {
 	
 	@Override
 	public Object checkProcessing(WebRequest request) {
-		String hostname = request.getRequest().getMIME().getHeaderSingleValue(HTTPRequest.HEADER_HOST);
+		String hostname = request.getRequest().getMIME().getFirstHeaderRawValue(HTTPRequest.HEADER_HOST);
 		if (hostname == null)
 			return null;
 		int i = hostname.indexOf(':');
@@ -127,7 +127,7 @@ public class WebRequestRouter implements WebRequestProcessor {
 	
 	@Override
 	public WebSocketHandler getWebSocketHandler(TCPServerClient client, HTTPRequest request, String path, String[] protocols) {
-		String hostname = request.getMIME().getHeaderSingleValue(HTTPRequest.HEADER_HOST);
+		String hostname = request.getMIME().getFirstHeaderRawValue(HTTPRequest.HEADER_HOST);
 		if (hostname == null)
 			return null;
 		int i = hostname.indexOf(':');

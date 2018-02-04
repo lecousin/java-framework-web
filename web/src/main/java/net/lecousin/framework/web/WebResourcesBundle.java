@@ -2,7 +2,6 @@ package net.lecousin.framework.web;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +34,7 @@ import net.lecousin.framework.json.JSONSerializer;
 import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.network.http.websocket.WebSocketDispatcher.WebSocketHandler;
 import net.lecousin.framework.network.http.websocket.WebSocketDispatcher.WebSocketRouter;
+import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
 import net.lecousin.framework.network.server.TCPServerClient;
 import net.lecousin.framework.plugins.ExtensionPoints;
 import net.lecousin.framework.util.Pair;
@@ -160,19 +160,19 @@ public class WebResourcesBundle implements WebRequestProcessor {
 	}
 	
 	public Deserializer getDeserializer(WebRequest request, Class<?> type) {
-		Pair<String, Map<String, String>> p;
-		try { p = request.getRequest().getMIME().parseContentType(); }
-		catch (IOException e) {
+		ParameterizedHeaderValue t;
+		try { t = request.getRequest().getMIME().getContentType(); }
+		catch (Exception e) {
 			return null;
 		}
-		if (p == null)
+		if (t == null)
 			return null;
-		String encoding = p.getValue2().get("charset");
+		String encoding = t.getParameter("charset");
 		Charset charset = null;
 		if (encoding != null)
 			try { charset = Charset.forName(encoding); }
-			catch (Throwable t) { /* ignore */ }
-		return getDeserializer(p.getValue1(), charset, type);
+			catch (Throwable err) { /* ignore */ }
+		return getDeserializer(t.getMainValue(), charset, type);
 	}
 	
 	public Deserializer getDeserializer(String contentType, Charset encoding, Class<?> type) {

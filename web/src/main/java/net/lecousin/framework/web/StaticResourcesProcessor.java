@@ -149,7 +149,7 @@ public class StaticResourcesProcessor implements WebRequestProcessor {
 		if (type == null)
 			type = "application/octet-stream";
 		request.getResponse().setStatus(200);
-		request.getResponse().setContentType(type);
+		request.getResponse().setRawContentType(type);
 		request.getResponse().getMIME().setBodyToSend(p.getValue2());
 		return new SynchronizationPoint<>(true);
 	}

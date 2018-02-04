@@ -48,12 +48,12 @@ public class TestWebServer extends AbstractTest {
 		Pair<HTTPClient, HTTPResponse> p = HTTPClientUtil.sendAndReceiveHeaders(Method.GET, "http://localhost:1080/my_context/static/test", (IO.Readable)null).blockResult(0);
 		p.getValue1().close();
 		Assert.assertEquals(3, p.getValue2().getStatusCode() / 100);
-		Assert.assertEquals("/my_context/static/1.0/test", p.getValue2().getMIME().getHeaderSingleValue("Location"));
+		Assert.assertEquals("/my_context/static/1.0/test", p.getValue2().getMIME().getFirstHeaderRawValue("Location"));
 
 		p = HTTPClientUtil.sendAndReceiveHeaders(Method.GET, "http://localhost:1080/my_context/static/test/0.1/hello", (IO.Readable)null).blockResult(0);
 		p.getValue1().close();
 		Assert.assertEquals(3, p.getValue2().getStatusCode() / 100);
-		Assert.assertEquals("/my_context/static/1.0/0.1/hello", p.getValue2().getMIME().getHeaderSingleValue("Location"));
+		Assert.assertEquals("/my_context/static/1.0/0.1/hello", p.getValue2().getMIME().getFirstHeaderRawValue("Location"));
 	}
 	
 	@Test(timeout=120000)
@@ -71,7 +71,7 @@ public class TestWebServer extends AbstractTest {
 		String expected = IOUtil.readFullyAsStringSync(LCCore.getApplication().getResource("test-webserver/static/file.txt", Task.PRIORITY_NORMAL), StandardCharsets.UTF_8);
 		Assert.assertEquals(expected, content);
 		// 1 hour cache
-		Assert.assertEquals("public,max-age=" + (60 * 60 * 1000), p.getValue1().getMIME().getHeaderSingleValue("Cache-Control"));
+		Assert.assertEquals("public,max-age=" + (60 * 60 * 1000), p.getValue1().getMIME().getFirstHeaderRawValue("Cache-Control"));
 	}
 	
 	@Test(timeout=120000)
@@ -90,12 +90,12 @@ public class TestWebServer extends AbstractTest {
 		Pair<HTTPResponse, IO.Readable.Seekable> p = HTTPClientUtil.GETfully("http://localhost:1080/my_context/cached", 0).blockResult(0);
 		String content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
 		Assert.assertEquals("This is test 1", content);
-		Assert.assertTrue(p.getValue1().getMIME().getHeaderSingleValue("Cache-Control").contains("public"));
+		Assert.assertTrue(p.getValue1().getMIME().getFirstHeaderRawValue("Cache-Control").contains("public"));
 		
 		p = HTTPClientUtil.GETfully("http://localhost:1080/my_context/cached/not", 0).blockResult(0);
 		content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
 		Assert.assertEquals("This is test 1", content);
-		Assert.assertTrue(p.getValue1().getMIME().getHeaderSingleValue("Cache-Control").contains("no-cache"));
+		Assert.assertTrue(p.getValue1().getMIME().getFirstHeaderRawValue("Cache-Control").contains("no-cache"));
 	}
 	
 	@Test(timeout=120000)
@@ -124,8 +124,8 @@ public class TestWebServer extends AbstractTest {
 		Pair<HTTPResponse, IO.Readable.Seekable> p = HTTPClientUtil.GETfully("http://localhost:1080/my_context/need_auth/test1?user=guillaume&pre-filter-1=hello", 0).blockResult(0);
 		String content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
 		Assert.assertEquals("This is test 1", content);
-		Assert.assertEquals("hello", p.getValue1().getMIME().getHeaderSingleValue("X-Pre-Filter-1"));
-		Assert.assertEquals("hello", p.getValue1().getMIME().getHeaderSingleValue("X-Post-Filter-1"));
+		Assert.assertEquals("hello", p.getValue1().getMIME().getFirstHeaderRawValue("X-Pre-Filter-1"));
+		Assert.assertEquals("hello", p.getValue1().getMIME().getFirstHeaderRawValue("X-Post-Filter-1"));
 	}
 
 }

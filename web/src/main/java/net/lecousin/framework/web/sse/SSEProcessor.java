@@ -15,7 +15,9 @@ import net.lecousin.framework.io.serialization.TypeDefinition;
 import net.lecousin.framework.json.JSONSerializer;
 import net.lecousin.framework.network.TCPRemote;
 import net.lecousin.framework.network.http.HTTPResponse;
-import net.lecousin.framework.network.mime.MIME;
+import net.lecousin.framework.network.mime.MimeHeader;
+import net.lecousin.framework.network.mime.MimeMessage;
+import net.lecousin.framework.network.mime.header.ParameterizedHeaderValues;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestProcessor;
 
@@ -151,8 +153,19 @@ public class SSEProcessor implements WebRequestProcessor {
 	
 	@Override
 	public Object checkProcessing(WebRequest request) {
-		String accept = request.getRequest().getHeader("Accept");
-		if (!"text/event-stream".equals(accept))
+		boolean acceptEventStream = false;
+		for (MimeHeader h : request.getRequest().getMIME().getHeaders("Accept")) {
+			try {
+				ParameterizedHeaderValues list = h.getValue(ParameterizedHeaderValues.class);
+				if (list.hasMainValue("text/event-stream")) {
+					acceptEventStream = true;
+					break;
+				}
+			} catch (Throwable t) {
+				// ignore
+			}
+		}
+		if (!acceptEventStream)
 			return null;
 		if (request.getSubPath().length() > 0)
 			return null;
@@ -163,8 +176,8 @@ public class SSEProcessor implements WebRequestProcessor {
 	public ISynchronizationPoint<? extends Exception> process(Object fromCheck, WebRequest request) {
 		HTTPResponse response = request.getResponse();
 		response.noCache();
-		response.setContentType("text/event-stream");
-		response.setHeader(MIME.CONNECTION, "keep-alive");
+		response.setRawContentType("text/event-stream");
+		response.getMIME().setHeaderRaw(MimeMessage.CONNECTION, "keep-alive");
 		try {
 			return newClient(request);
 		} catch (Throwable t) {

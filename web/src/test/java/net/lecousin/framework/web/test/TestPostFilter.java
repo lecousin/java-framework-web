@@ -8,9 +8,9 @@ public class TestPostFilter implements WebRequestFilter {
 
 	@Override
 	public AsyncWork<FilterResult, Exception> filter(WebRequest request) {
-		String value = request.getResponse().getMIME().getHeaderSingleValue("X-Pre-Filter-1");
+		String value = request.getResponse().getMIME().getFirstHeaderRawValue("X-Pre-Filter-1");
 		if (value != null)
-			request.getResponse().getMIME().setHeader("X-Post-Filter-1", value);
+			request.getResponse().getMIME().setHeaderRaw("X-Post-Filter-1", value);
 		return new AsyncWork<>(FilterResult.CONTINUE_PROCESSING, null);
 	}
 	

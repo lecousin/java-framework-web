@@ -1,5 +1,6 @@
 package net.lecousin.framework.web.services.soap;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -12,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import net.lecousin.framework.application.LCCore;
 import net.lecousin.framework.concurrent.Task;
@@ -31,6 +31,8 @@ import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.exception.HTTPError;
 import net.lecousin.framework.network.http.exception.HTTPResponseError;
+import net.lecousin.framework.network.mime.MimeUtil;
+import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
 import net.lecousin.framework.network.server.TCPServerClient;
 import net.lecousin.framework.network.session.Session;
 import net.lecousin.framework.util.ClassUtil;
@@ -168,13 +170,13 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 
 	@Override
 	public Object checkProcessing(WebRequest request) {
-		String action = request.getRequest().getHeader("SOAPAction");
+		String action = request.getRequest().getMIME().getFirstHeaderRawValue("SOAPAction");
 		if (action != null) {
-			action = action.trim();
-			if (action.startsWith("\"")) {
-				// TODO decode
-				action = action.substring(1, action.length()-1);
+			try { action = MimeUtil.decodeRFC2047(action); }
+			catch (IOException e) {
+				// ignore
 			}
+			action = action.trim();
 			// this is an operation request
 			// we expect it to be a POST and no sub-path
 			if (!HTTPRequest.Method.POST.equals(request.getRequest().getMethod()))
@@ -200,7 +202,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 			return processDocRequest(request);
 		Operation op = (Operation)fromCheck;
 		// start reading the body
-		PreBufferedReadable input = new PreBufferedReadable(request.getRequest().getMIME().getBodyOutputAsInput(), 8192, Task.PRIORITY_NORMAL, 4096, Task.PRIORITY_NORMAL, 16);
+		PreBufferedReadable input = new PreBufferedReadable(request.getRequest().getMIME().getBodyReceivedAsInput(), 8192, Task.PRIORITY_NORMAL, 4096, Task.PRIORITY_NORMAL, 16);
 		// check authentication
 		SynchronizationPoint<Exception> sp = new SynchronizationPoint<>();
 		processOperation(op, input, request, sp);
@@ -208,16 +210,16 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 	}
 	
 	private void processOperation(Operation op, IO.Readable.Buffered input, WebRequest request, SynchronizationPoint<Exception> sp) {
-		Pair<String, Map<String, String>> contentType;
-		try { contentType = request.getRequest().getMIME().parseContentType(); }
+		ParameterizedHeaderValue contentType;
+		try { contentType = request.getRequest().getMIME().getContentType(); }
 		catch (Throwable t) {
 			error(400, "Invalid Content-Type: " + t.getMessage(), false, request);
 			sp.unblock();
 			return;
 		}
-		if (contentType.getValue1().equals("application/soap+xml") || contentType.getValue1().equals("text/xml")) {
+		if (contentType.getMainValue().equals("application/soap+xml") || contentType.getMainValue().equals("text/xml")) {
 			Charset encoding = null;
-			String charset = contentType.getValue2().get("charset");
+			String charset = contentType.getParameterIgnoreCase("charset");
 			if (charset != null)
 				try { encoding = Charset.forName(charset); }
 				catch (Throwable t) {}
@@ -225,7 +227,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 			processOperation(op, xml, request, sp);
 			return;
 		}
-		error(400, "Content-Type " + contentType.getValue1() + " not supported", false, request);
+		error(400, "Content-Type " + contentType.getMainValue() + " not supported", false, request);
 		sp.unblock();
 	}
 	
@@ -930,7 +932,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 	
 	private static OutputToInputBuffers initSendMessage(int code, WebRequest request) {
 		request.getResponse().setStatus(code);
-		request.getResponse().setContentType("application/soap+xml; charset=utf-8");
+		request.getResponse().setRawContentType("application/soap+xml; charset=utf-8");
 		OutputToInputBuffers o2i = new OutputToInputBuffers(false, 4, Task.PRIORITY_NORMAL);
 		request.getResponse().getMIME().setBodyToSend(o2i);
 		return o2i;

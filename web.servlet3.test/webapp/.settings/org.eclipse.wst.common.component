@@ -11,13 +11,13 @@
         <dependent-module archiveName="web-0.1.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.web/net.lecousin.framework.web">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="http-0.2.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.http/net.lecousin.framework.network.http">
+        <dependent-module archiveName="http-0.3.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.http/net.lecousin.framework.network.http">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="core-0.2.5.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.core/net.lecousin.framework.network.core">
+        <dependent-module archiveName="core-0.2.8.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.core/net.lecousin.framework.network.core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="mime-0.2.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.mime/net.lecousin.framework.network.mime">
+        <dependent-module archiveName="mime-0.3.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.mime/net.lecousin.framework.network.mime">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="gzip-0.1.5.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.compression.gzip/net.lecousin.compression.gzip">
@@ -35,7 +35,7 @@
         <dependent-module archiveName="core.javaee-0.9.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="core-0.9.15.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.core/net.lecousin.core">
+        <dependent-module archiveName="core-0.9.16.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.core/net.lecousin.core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="context-root" value="web.servlet3.test.webapp"/>

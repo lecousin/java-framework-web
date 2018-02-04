@@ -7,14 +7,13 @@ import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.io.IO;
 import net.lecousin.framework.io.serialization.Deserializer;
 import net.lecousin.framework.io.serialization.TypeDefinition;
 import net.lecousin.framework.network.http.HTTPRequest;
-import net.lecousin.framework.util.Pair;
+import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
 import net.lecousin.framework.web.WebResourcesBundle;
 
 /** Utility methods for web services. */
@@ -86,16 +85,16 @@ public final class WebServiceUtils {
 	public static AsyncWork<?, Exception> fillFromBody(
 		Class<?> type, ParameterizedType ptype, HTTPRequest request, WebResourcesBundle bundle
 	) throws Exception {
-		IO.Readable.Seekable body = (IO.Readable.Seekable)request.getMIME().getBodyOutputAsInput();
+		IO.Readable.Seekable body = (IO.Readable.Seekable)request.getMIME().getBodyReceivedAsInput();
 		if (body == null)
 			throw new Exception("No data received");
 		try {
-			Pair<String, Map<String, String>> ct = request.getMIME().parseContentType();
+			ParameterizedHeaderValue ct = request.getMIME().getContentType();
 			if (ct == null)
 				throw new Exception("No Content-Type specified");
 			
-			String mimeType = ct.getValue1();
-			String encoding = ct.getValue2().get("charset");
+			String mimeType = ct.getMainValue();
+			String encoding = ct.getParameterIgnoreCase("charset");
 			Charset charset = null;
 			if (encoding != null) charset = Charset.forName(encoding);
 

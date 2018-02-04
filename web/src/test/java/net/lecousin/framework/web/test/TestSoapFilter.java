@@ -7,12 +7,12 @@ public class TestSoapFilter implements SOAPFilter {
 
 	@SOAPFilter.PreFilter
 	public void preFilter(WebRequest req) {
-		req.getResponse().addHeaderValue("X-SOAP-PreFiltered", "true");
+		req.getResponse().addHeaderRaw("X-SOAP-PreFiltered", "true");
 	}
 	
 	@SOAPFilter.PostFilter
 	public void postFilter(WebRequest req) {
-		req.getResponse().addHeaderValue("X-SOAP-PostFiltered", "true");
+		req.getResponse().addHeaderRaw("X-SOAP-PostFiltered", "true");
 	}
 	
 }

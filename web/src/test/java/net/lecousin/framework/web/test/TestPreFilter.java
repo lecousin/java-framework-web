@@ -10,7 +10,7 @@ public class TestPreFilter implements WebRequestFilter {
 	public AsyncWork<FilterResult, Exception> filter(WebRequest request) {
 		String value = request.getRequest().getParameter("pre-filter-1");
 		if (value != null)
-			request.getResponse().getMIME().setHeader("X-Pre-Filter-1", value);
+			request.getResponse().getMIME().setHeaderRaw("X-Pre-Filter-1", value);
 		return new AsyncWork<>(FilterResult.CONTINUE_PROCESSING, null);
 	}
 	

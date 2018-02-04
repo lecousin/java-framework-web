@@ -267,7 +267,7 @@ public class WebServer implements Closeable {
 		
 		@Override
 		public ISynchronizationPoint<? extends Exception> process(Object fromCheck, WebRequest request) {
-			String hostname = request.getRequest().getMIME().getHeaderSingleValue(HTTPRequest.HEADER_HOST);
+			String hostname = request.getRequest().getMIME().getFirstHeaderRawValue(HTTPRequest.HEADER_HOST);
 			if (hostname == null) {
 				request.getResponse().setStatus(400, "Bad Request, Host is missing");
 				return new SynchronizationPoint<>(true);
@@ -283,7 +283,7 @@ public class WebServer implements Closeable {
 		
 		@Override
 		public WebSocketHandler getWebSocketHandler(TCPServerClient client, HTTPRequest request, String path, String[] protocols) {
-			String hostname = request.getMIME().getHeaderSingleValue(HTTPRequest.HEADER_HOST);
+			String hostname = request.getMIME().getFirstHeaderRawValue(HTTPRequest.HEADER_HOST);
 			if (hostname == null) return null;
 			if (router != null) return router.getWebSocketHandler(client, request, path, protocols);
 			return null;

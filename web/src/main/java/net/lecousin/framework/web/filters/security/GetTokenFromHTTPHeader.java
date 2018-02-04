@@ -1,6 +1,7 @@
 package net.lecousin.framework.web.filters.security;
 
 import net.lecousin.framework.concurrent.synch.AsyncWork;
+import net.lecousin.framework.network.mime.MimeUtil;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestFilter;
 import net.lecousin.framework.web.security.TokenRequest;
@@ -20,9 +21,11 @@ public class GetTokenFromHTTPHeader implements WebRequestFilter {
 	
 	@Override
 	public AsyncWork<FilterResult, Exception> filter(WebRequest request) {
-		String token = request.getRequest().getHeader(tokenHeader);
+		String token = request.getRequest().getMIME().getFirstHeaderRawValue(tokenHeader);
 		if (token == null)
 			return new AsyncWork<>(FilterResult.CONTINUE_PROCESSING, null);
+		try { token = MimeUtil.decodeRFC2047(token); }
+		catch (Throwable t) { /* ignore */ }
 		request.addAuthenticationRequest(new TokenRequest(tokenType, token));
 		return new AsyncWork<>(FilterResult.CONTINUE_PROCESSING, null);
 	}
