@@ -32,7 +32,9 @@ import net.lecousin.framework.json.JSONSerializer;
 import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.exception.HTTPResponseError;
+import net.lecousin.framework.network.http.server.HTTPServerProtocol;
 import net.lecousin.framework.network.mime.MimeHeader;
+import net.lecousin.framework.network.mime.MimeMessage;
 import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
 import net.lecousin.framework.network.mime.header.ParameterizedHeaderValues;
 import net.lecousin.framework.network.server.TCPServerClient;
@@ -840,9 +842,20 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 	
 	@SuppressWarnings("resource")
 	private static void success(Object result, TypeDefinition expectedType, WebRequest request, WebResourcesBundle bundle, SynchronizationPoint<Exception> sp) {
-		if (result == null && (Void.class.equals(expectedType) || void.class.equals(expectedType))) {
+		if (result == null && (Void.class.equals(expectedType.getBase()) || void.class.equals(expectedType.getBase()))) {
 			// nothing returned
 			request.getResponse().setStatus(200);
+			sp.unblock();
+			return;
+		}
+		
+		if (MimeMessage.class.isAssignableFrom(expectedType.getBase())) {
+			// raw result
+			MimeMessage mime = (MimeMessage)result;
+			for (MimeHeader h : mime.getHeaders())
+				request.getResponse().getMIME().addHeader(h);
+			request.getResponse().getMIME().setBodyToSend(mime.getBodyToSend());
+			HTTPServerProtocol.handleRangeRequest(request.getRequest(), request.getResponse());
 			sp.unblock();
 			return;
 		}
