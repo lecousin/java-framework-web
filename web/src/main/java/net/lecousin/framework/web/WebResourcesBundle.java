@@ -182,7 +182,9 @@ public class WebResourcesBundle implements WebRequestProcessor {
 				return ((WebResourcesBundle)parent).getDeserializer(contentType, encoding, type);
 			return null;
 		}
-		return provider.provide(new Pair<>(type, encoding));
+		Deserializer d = provider.provide(new Pair<>(type, encoding));
+		d.setMaximumTextSize(16384);
+		return d;
 	}
 
 	public Serializer getSerializer(String contentType, Charset encoding, Class<?> type) {

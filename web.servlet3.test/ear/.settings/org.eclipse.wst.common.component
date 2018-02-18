@@ -32,7 +32,7 @@
         <dependent-module archiveName="injection-0.1.2.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.injection/net.lecousin.framework.injection">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="json-0.1.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.json/net.lecousin.framework.json">
+        <dependent-module archiveName="json-0.2.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.json/net.lecousin.framework.json">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="org.everit.json.schema-1.6.1.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/github/everit-org/json-schema/org.everit.json.schema/1.6.1/org.everit.json.schema-1.6.1.jar">
@@ -71,10 +71,10 @@
         <dependent-module archiveName="joda-time-2.9.4.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/joda-time/joda-time/2.9.4/joda-time-2.9.4.jar">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="core.javaee-0.9.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
+        <dependent-module archiveName="core.javaee-0.10.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="core-0.9.16.jar" deploy-path="/" handle="module:/resource/net.lecousin.core/net.lecousin.core">
+        <dependent-module archiveName="core-0.10.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core/net.lecousin.core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="spotbugs-annotations-3.1.1.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/github/spotbugs/spotbugs-annotations/3.1.1/spotbugs-annotations-3.1.1.jar">
