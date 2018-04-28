@@ -20,7 +20,7 @@
         <dependent-module archiveName="commons-logging-1.2.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-logging/commons-logging/1.2/commons-logging-1.2.jar">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="mime-0.3.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.mime/net.lecousin.framework.network.mime">
+        <dependent-module archiveName="mime-0.3.1.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.mime/net.lecousin.framework.network.mime">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="gzip-0.1.5.jar" deploy-path="/" handle="module:/resource/net.lecousin.compression.gzip/net.lecousin.compression.gzip">
