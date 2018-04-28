@@ -9,6 +9,7 @@ import java.util.Map;
 
 import net.lecousin.framework.application.LCCore;
 import net.lecousin.framework.concurrent.Task;
+import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.concurrent.synch.ISynchronizationPoint;
 import net.lecousin.framework.concurrent.synch.SynchronizationPoint;
 import net.lecousin.framework.exception.NoException;
@@ -95,8 +96,8 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 
 			request.getResponse().setRawContentType("text/html;charset=utf-8");
 			IO.Readable io = LCCore.getApplication().getResource("net.lecousin.framework.web/services-doc/services-template.html", Task.PRIORITY_NORMAL);
-			Task<UnprotectedStringBuffer,IOException> read = IOUtil.readFullyAsString(io, StandardCharsets.UTF_8, Task.PRIORITY_NORMAL);
-			read.getOutput().listenInline(() -> { io.closeAsync(); });
+			AsyncWork<UnprotectedStringBuffer,IOException> read = IOUtil.readFullyAsString(io, StandardCharsets.UTF_8, Task.PRIORITY_NORMAL);
+			read.listenInline(() -> { io.closeAsync(); });
 			
 			// list by service type
 			Map<String, List<Pair<String, WebServiceProvider>>> byType = new HashMap<>();
@@ -150,7 +151,7 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 				request.getResponse().getMIME().setBodyToSend(o2i);
 				request.getResponse().setStatus(200);
 				sp.unblock();
-			}).startOn(read.getOutput(), true);
+			}).startOn(read, true);
 			return null;
 		}
 		
