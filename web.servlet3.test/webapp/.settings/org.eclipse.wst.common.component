@@ -11,7 +11,7 @@
         <dependent-module archiveName="web-0.1.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.web/net.lecousin.framework.web">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="http-0.3.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.http/net.lecousin.framework.network.http">
+        <dependent-module archiveName="http-0.3.2.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.http/net.lecousin.framework.network.http">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="core-0.2.8.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.core/net.lecousin.framework.network.core">
@@ -20,10 +20,10 @@
         <dependent-module archiveName="mime-0.3.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.network.mime/net.lecousin.framework.network.mime">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="gzip-0.1.5.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.compression.gzip/net.lecousin.compression.gzip">
+        <dependent-module archiveName="gzip-0.1.6.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.compression.gzip/net.lecousin.compression.gzip">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="deflate-0.1.5.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.compression.deflate/net.lecousin.compression.deflate">
+        <dependent-module archiveName="deflate-0.1.6.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.compression.deflate/net.lecousin.compression.deflate">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="injection-0.1.2.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/net.lecousin.framework.injection/net.lecousin.framework.injection">
