@@ -46,7 +46,7 @@ public class RemoteBridge implements TCPRemote {
 		// TODO
 		sp.error(new IOException("Send not yet implemented"));
 	}
-
+	
 	@Override
 	public void onclosed(Runnable listener) {
 		ctx.addListener(new AsyncListener() {
