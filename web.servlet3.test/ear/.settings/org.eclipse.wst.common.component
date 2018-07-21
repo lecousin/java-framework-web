@@ -74,10 +74,10 @@
         <dependent-module archiveName="joda-time-joda-time-2.9.4.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/joda-time/joda-time/2.9.4/joda-time-2.9.4.jar">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="net-lecousin-core.javaee-0.12.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
+        <dependent-module archiveName="net-lecousin-core.javaee-0.13.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="net-lecousin-core-0.12.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core/net.lecousin.core">
+        <dependent-module archiveName="net-lecousin-core-0.13.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core/net.lecousin.core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
     </wb-module>
