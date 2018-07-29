@@ -1,4 +1,4 @@
-package net.lecousin.framework.web.test;
+package net.lecousin.framework.web.test.services.soap;
 
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.services.soap.SOAPFilter;

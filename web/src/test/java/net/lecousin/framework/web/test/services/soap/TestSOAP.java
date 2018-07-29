@@ -1,8 +1,13 @@
-package net.lecousin.framework.web;
+package net.lecousin.framework.web.test.services.soap;
 
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import com.eviware.soapui.impl.WsdlInterfaceFactory;
 import com.eviware.soapui.impl.wsdl.WsdlInterface;
@@ -20,14 +25,9 @@ import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.web.security.LoginRequest;
 import net.lecousin.framework.web.services.soap.SOAPClient;
 import net.lecousin.framework.web.services.soap.SOAPMessageContent;
-import net.lecousin.framework.web.test.TestSoapService;
-import net.lecousin.framework.web.test.TestSoapService.TestMyHeader;
+import net.lecousin.framework.web.test.AbstractTest;
+import net.lecousin.framework.web.test.services.soap.TestSoapService.TestMyHeader;
 import net.lecousin.framework.xml.dom.DOMUtil;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 public class TestSOAP extends AbstractTest {
 
@@ -35,13 +35,13 @@ public class TestSOAP extends AbstractTest {
 	public void testSOAPHelloWorld() throws Exception {
 		TestSoapService.TestRequest req = new TestSoapService.TestRequest();
 		req.name = "World";
-		TestSoapService.TestResult response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "helloWorld", req, "http://testRequest", TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		TestSoapService.TestResult response = SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "helloWorld", req, "http://testRequest", TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello World", response.hello);
 	}
 
 	@Test(timeout=120000)
 	public void testSOAPHelloWorldFromQuery() throws Exception {
-		TestSoapService.TestResult response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap?name=World+of+query", "helloFromQuery", null, "http://testRequest", TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		TestSoapService.TestResult response = SOAPClient.send(BASE_HTTP_URL + "/services/testSoap?name=World+of+query", "helloFromQuery", null, "http://testRequest", TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello World of query", response.hello);
 	}
 
@@ -50,7 +50,7 @@ public class TestSOAP extends AbstractTest {
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element req = doc.createElement("MyElement");
 		req.setAttribute("hello", "world");
-		Element response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "testAnyInputAndOutput", req, null, Element.class, null, new ArrayList<>(0)).blockResult(0);
+		Element response = SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "testAnyInputAndOutput", req, null, Element.class, null, new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("myResponseToMyElement", response.getLocalName());
 		Element myElement = DOMUtil.getChild(response, "MyElement");
 		Assert.assertNotNull(myElement);
@@ -76,7 +76,7 @@ public class TestSOAP extends AbstractTest {
 		header.contentType = new TypeDefinition(TestMyHeader.class);
 		request.headers.add(header);
 		
-		TestSoapService.TestResult response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		TestSoapService.TestResult response = SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello Test1, This is a test with header", response.hello);
 	}
 
@@ -109,10 +109,10 @@ public class TestSOAP extends AbstractTest {
 		header.contentType = new TypeDefinition(TestMyHeader.class);
 		request.headers.add(header);
 		
-		TestSoapService.TestResult response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		TestSoapService.TestResult response = SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello Test2, This is a test with header, this is custom", response.hello);
 		
-		Pair<TestSoapService.TestResult, HTTPResponse> resp = SOAPClient.sendAndGetHTTPResponse("http://localhost:1080/my_context/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		Pair<TestSoapService.TestResult, HTTPResponse> resp = SOAPClient.sendAndGetHTTPResponse(BASE_HTTP_URL + "/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello Test2, This is a test with header, this is custom", resp.getValue1().hello);
 		Assert.assertEquals("true", resp.getValue2().getMIME().getFirstHeaderRawValue("X-SOAP-PreFiltered"));
 		Assert.assertEquals("true", resp.getValue2().getMIME().getFirstHeaderRawValue("X-SOAP-PostFiltered"));
@@ -138,7 +138,7 @@ public class TestSOAP extends AbstractTest {
 		header.contentType = new TypeDefinition(TestMyHeader.class);
 		request.headers.add(header);
 		
-		TestSoapService.TestResult response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		TestSoapService.TestResult response = SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello Test3, only custom", response.hello);
 	}
 	
@@ -172,7 +172,7 @@ public class TestSOAP extends AbstractTest {
 		header.contentType = new TypeDefinition(TestMyHeader.class);
 		request.headers.add(header);
 		
-		TestSoapService.TestResult response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		TestSoapService.TestResult response = SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "testWithHeader", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello Test4, this is custom", response.hello);
 	}
 	
@@ -215,7 +215,7 @@ public class TestSOAP extends AbstractTest {
 		header.namespaceURI = "http://customURI";
 		header.contentType = new TypeDefinition(TestMyHeader.class);
 		response.headers.add(header);
-		SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "testWithHeader2", request, response, new ArrayList<>(0)).blockThrow(0);
+		SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "testWithHeader2", request, response, new ArrayList<>(0)).blockThrow(0);
 		Assert.assertTrue(response.bodyContent instanceof TestSoapService.TestResult);
 		Assert.assertEquals("Hello Test5", ((TestSoapService.TestResult)response.bodyContent).hello);
 		Assert.assertNotNull(response.headers.get(0).content);
@@ -253,7 +253,7 @@ public class TestSOAP extends AbstractTest {
 		header.namespaceURI = "http://test";
 		header.contentType = new TypeDefinition(TestMyHeader.class);
 		response.headers.add(header);
-		SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "testWithHeader3", request, response, new ArrayList<>(0)).blockThrow(0);
+		SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "testWithHeader3", request, response, new ArrayList<>(0)).blockThrow(0);
 		Assert.assertTrue(response.bodyContent instanceof TestSoapService.TestResult);
 		Assert.assertEquals("Hello Test6", ((TestSoapService.TestResult)response.bodyContent).hello);
 		Assert.assertNotNull(response.headers.get(0).content);
@@ -281,12 +281,12 @@ public class TestSOAP extends AbstractTest {
 		header.contentType = new TypeDefinition(LoginRequest.class);
 		request.headers.add(header);
 
-		TestSoapService.TestResult response = SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "helloWorldWithAuthentication", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+		TestSoapService.TestResult response = SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "helloWorldWithAuthentication", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 		Assert.assertEquals("Hello TestGuillaume, you are well authenticated as guillaume", response.hello);
 		
 		request.headers.clear();
 		try {
-			SOAPClient.send("http://localhost:1080/my_context/services/testSoap", "helloWorldWithAuthentication", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
+			SOAPClient.send(BASE_HTTP_URL + "/services/testSoap", "helloWorldWithAuthentication", request, TestSoapService.TestResult.class, "http://testResponse", new ArrayList<>(0)).blockResult(0);
 			throw new AssertionError("Error expected when not sending login");
 		} catch (HTTPResponseError e) {
 			Assert.assertEquals(403, e.getStatusCode());
@@ -296,11 +296,11 @@ public class TestSOAP extends AbstractTest {
 	@Test(timeout=120000)
 	public void testWithSOAPUIFromWSDL() throws Exception {
 		WsdlProject project = new WsdlProject();
-		WsdlInterface iface = WsdlInterfaceFactory.importWsdl(project, "http://localhost:1080/my_context/services/testSoap/wsdl", true )[0];
+		WsdlInterface iface = WsdlInterfaceFactory.importWsdl(project, BASE_HTTP_URL + "/services/testSoap/wsdl", true )[0];
 		WsdlOperation operation = (WsdlOperation) iface.getOperationByName("helloWorld");
 		WsdlRequest request = operation.addNewRequest("My request");
 		request.setRequestContent(operation.createRequest(true));
-		request.setEndpoint("http://localhost:1080/my_context/services/testSoap");
+		request.setEndpoint(BASE_HTTP_URL + "/services/testSoap");
 		WsdlSubmit submit = (WsdlSubmit) request.submit(new WsdlSubmitContext(iface), false);
 		Response response = submit.getResponse();
 		String content = response.getContentAsString();

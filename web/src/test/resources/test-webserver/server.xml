@@ -16,7 +16,7 @@
 		<route>
 			<ipAddresses>127.0.0.1</ipAddresses>
 			<hostnames>localhost</hostnames>
-			<processorByPath path="my_context" class="net.lecousin.framework.web.WebResourcesBundle" config="test-webserver/myapp.xml"/>
+			<processorByPath path="test" class="net.lecousin.framework.web.WebResourcesBundle" config="test-webserver/test.xml"/>
 		</route>
 	</routing>
 </WebServerConfig>

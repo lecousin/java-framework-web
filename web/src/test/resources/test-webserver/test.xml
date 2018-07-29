@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle
+	xmlns="http://code.lecousin.net/java/net.lecousin.framework.web/bundle/0.1"
+>
+
+	<bundle path="version_redirection">
+		<Injection xmlns="http://code.lecousin.net/java/net.lecousin.framework.injection/0.1">
+			<property name="version" value="1.0"/>
+		</Injection>
+		<bundle path="${version}">
+		</bundle>
+		<processor path="" class="net.lecousin.framework.web.VersionRedirection">
+			<attribute name="version" value="${version}"/>
+		</processor>
+	</bundle>
+	
+	<bundle path="static">
+		<processor path="" class="net.lecousin.framework.web.StaticResourcesProcessor">
+			<attribute name="fromClassPath" value="test-webserver/static"/>
+			<attribute name="directoryPages" value="index.htm,index.html"/>
+		</processor>
+		<processor path="fs" class="net.lecousin.framework.web.StaticResourcesProcessor">
+			<attribute name="fromFileSystem" value="${java.io.tmpdir}"/>
+		</processor>
+		<processor path="fs2" class="net.lecousin.framework.web.StaticResourcesProcessor">
+			<attribute name="fromFileSystem" value="${java.io.tmpdir}/test_web_static"/>
+			<attribute name="directoryPages" value="index.htm,index.html"/>
+		</processor>
+		
+		<bundle path="cached">
+			<pre-filter class="net.lecousin.framework.web.filters.CacheFilter">
+				<attribute name="maxAge" value="1 hour"/>
+			</pre-filter>
+			<processor path="" class="net.lecousin.framework.web.StaticResourcesProcessor">
+				<attribute name="fromClassPath" value="test-webserver/static"/>
+				<attribute name="directoryPages" value="index.htm,index.html"/>
+			</processor>
+		</bundle>
+		
+		<bundle path="restricted">
+			<processor path="" class="net.lecousin.framework.web.StaticResourcesProcessor">
+				<attribute name="fromClassPath" value="test-webserver/static"/>
+				<attribute name="restrictPatterns" value="*.gif,*.htm*"/>
+			</processor>
+		</bundle>
+	</bundle>
+
+	<bundle path="filters">
+		<bundle path="prepost">
+			<pre-filter class="net.lecousin.framework.web.test.TestPreFilter"/>
+			<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+			<post-filter class="net.lecousin.framework.web.test.TestPostFilter"/>
+		</bundle>
+		
+		<bundle path="cache">
+			<pre-filter class="net.lecousin.framework.web.filters.CacheFilter">
+				<attribute name="maxAge" value="10 days"/>
+			</pre-filter>
+			<processor path="" class="net.lecousin.framework.web.test.Test1Processor"/>
+			<bundle path="not">
+				<pre-filter class="net.lecousin.framework.web.filters.CacheFilter">
+					<attribute name="maxAge" value="-1"/>
+				</pre-filter>
+				<processor path="" class="net.lecousin.framework.web.test.Test1Processor"/>
+			</bundle>
+		</bundle>
+		
+		<bundle path="security">
+			<Injection xmlns="http://code.lecousin.net/java/net.lecousin.framework.injection/0.1">
+				<Singleton id="testAuthenticationProvider" type="net.lecousin.framework.web.security.IAuthenticationProvider">
+					<class name="net.lecousin.framework.web.test.TestAuthenticationProvider"/>
+				</Singleton>
+			</Injection>
+
+			<pre-filter class="net.lecousin.framework.web.filters.security.GetLoginFromQuery">
+				<attribute name="usernameParameter" value="user"/>
+				<attribute name="passwordParameter" value="pass"/>
+			</pre-filter>
+			<pre-filter class="net.lecousin.framework.web.filters.security.RequiresRolesFilter">
+				<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+				<attribute name="roles" value="Role1,Role2"/>
+			</pre-filter>
+			<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+		</bundle>
+	</bundle>
+	
+	<bundle path="services">
+		<Injection xmlns="http://code.lecousin.net/java/net.lecousin.framework.injection/0.1">
+			<Singleton id="testAuthenticationProvider" type="net.lecousin.framework.web.security.IAuthenticationProvider">
+				<class name="net.lecousin.framework.web.test.TestAuthenticationProvider"/>
+			</Singleton>
+		</Injection>
+
+		<custom-filter class="net.lecousin.framework.web.services.soap.filters.GetAuthenticationRequestFromSOAPHeader"/>
+		<custom-filter class="net.lecousin.framework.web.test.services.soap.TestSoapFilter"/>
+		<service class="net.lecousin.framework.web.test.services.rest.TestRestService"/>
+		<service class="net.lecousin.framework.web.test.services.soap.TestSoapService"/>
+		<processor path="" class="net.lecousin.framework.web.services.doc.WebServicesDocumentation"/>
+	</bundle>
+	
+</bundle>
