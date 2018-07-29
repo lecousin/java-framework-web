@@ -11,10 +11,10 @@
         <dependent-module archiveName="net-lecousin-framework-web-0.1.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.web/net.lecousin.framework.web">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="net-lecousin-framework-network-http-0.3.5.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.http/net.lecousin.framework.network.http">
+        <dependent-module archiveName="net-lecousin-framework-network-http-0.3.6.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.http/net.lecousin.framework.network.http">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="net-lecousin-framework-network-core-0.3.2.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.core/net.lecousin.framework.network.core">
+        <dependent-module archiveName="net-lecousin-framework-network-core-0.3.4.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.core/net.lecousin.framework.network.core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="net-lecousin-framework-network-mime-0.3.3.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.network.mime/net.lecousin.framework.network.mime">
@@ -74,10 +74,10 @@
         <dependent-module archiveName="joda-time-joda-time-2.9.4.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/joda-time/joda-time/2.9.4/joda-time-2.9.4.jar">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="net-lecousin-core.javaee-0.13.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
+        <dependent-module archiveName="net-lecousin-core.javaee-0.13.1.jar" deploy-path="/" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="net-lecousin-core-0.13.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.core/net.lecousin.core">
+        <dependent-module archiveName="net-lecousin-core-0.13.1.jar" deploy-path="/" handle="module:/resource/net.lecousin.core/net.lecousin.core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
     </wb-module>
