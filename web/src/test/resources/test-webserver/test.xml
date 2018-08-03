@@ -76,11 +76,49 @@
 				<attribute name="usernameParameter" value="user"/>
 				<attribute name="passwordParameter" value="pass"/>
 			</pre-filter>
-			<pre-filter class="net.lecousin.framework.web.filters.security.RequiresRolesFilter">
-				<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
-				<attribute name="roles" value="Role1,Role2"/>
+			<pre-filter class="net.lecousin.framework.web.filters.security.GetLoginFromHTTPHeader">
+				<attribute name="usernameHeader" value="useR"/>
+				<attribute name="passwordHeader" value="pass"/>
 			</pre-filter>
-			<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+			<pre-filter class="net.lecousin.framework.web.filters.security.GetTokenFromQuery">
+				<attribute name="tokenType" value="test"/>
+				<attribute name="tokenParameter" value="auth-token"/>
+			</pre-filter>
+			<pre-filter class="net.lecousin.framework.web.filters.security.GetTokenFromHTTPHeader">
+				<attribute name="tokenType" value="test"/>
+				<attribute name="tokenHeader" value="toKen"/>
+			</pre-filter>
+			
+			<bundle path="auth">
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireAuthentication">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+			</bundle>
+
+			<bundle path="role1">
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireRolesFilter">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="roles" value="Role1"/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+			</bundle>
+
+			<bundle path="role2">
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireRolesFilter">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="roles" value="Role2"/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+			</bundle>
+
+			<bundle path="role1and2">
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireRolesFilter">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="roles" value="Role1,Role2"/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+			</bundle>
 		</bundle>
 	</bundle>
 	
