@@ -3,6 +3,8 @@ package net.lecousin.framework.web.security;
 import java.util.List;
 import java.util.Map;
 
+import net.lecousin.framework.math.FragmentedRangeInteger;
+
 /**
  * Interface to hold information about authenticated user or system.
  */
@@ -42,6 +44,14 @@ public interface IAuthentication {
 		Map<String, Integer> rights = getIntegerRights();
 		Integer val = rights.get(name);
 		return val != null && val.intValue() == value;
+	}
+	
+	/** Return true if the given right and value are in the list of the user's rights or is a super administrator. */
+	public default boolean hasRight(String name, FragmentedRangeInteger acceptedValues) {
+		if (isSuperAdmin()) return true;
+		Map<String, Integer> rights = getIntegerRights();
+		Integer val = rights.get(name);
+		return val != null && acceptedValues.containsValue(val.intValue());
 	}
 	
 	/** Return an object that can be serialized by a web service, to describe the authenticated user. */

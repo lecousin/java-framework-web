@@ -4,6 +4,7 @@ import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.exception.NoException;
 import net.lecousin.framework.injection.Inject;
+import net.lecousin.framework.math.FragmentedRangeInteger;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestFilter;
 import net.lecousin.framework.web.security.IAuthentication;
@@ -15,21 +16,21 @@ import net.lecousin.framework.web.security.IAuthenticationProvider;
 public class RequireIntegerRight implements WebRequestFilter {
 
 	/** Constructor. */
-	public RequireIntegerRight(String rightName, int rightValue) {
+	public RequireIntegerRight(String rightName, FragmentedRangeInteger rightValues) {
 		this.rightName = rightName;
-		this.rightValue = rightValue;
+		this.rightValues = rightValues;
 	}
 
 	/** Constructor. */
 	public RequireIntegerRight() {
-		this(null, 0);
+		this(null, new FragmentedRangeInteger());
 	}
 	
 	@Inject
 	private IAuthenticationProvider authenticationProvider;
 	
 	private String rightName;
-	private int rightValue;
+	private FragmentedRangeInteger rightValues;
 	
 	@Override
 	public AsyncWork<FilterResult, Exception> filter(WebRequest request) {
@@ -50,7 +51,7 @@ public class RequireIntegerRight implements WebRequestFilter {
 					result.unblockSuccess(FilterResult.STOP_PROCESSING);
 					return null;
 				}
-				if (!a.hasRight(rightName, rightValue)) {
+				if (!a.hasRight(rightName, rightValues)) {
 					request.getResponse().setStatus(403, "Request not allowed, it needs right " + rightName);
 					result.unblockSuccess(FilterResult.STOP_PROCESSING);
 					return null;

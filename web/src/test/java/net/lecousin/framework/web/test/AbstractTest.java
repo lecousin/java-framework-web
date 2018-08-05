@@ -1,18 +1,19 @@
 package net.lecousin.framework.web.test;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+
 import net.lecousin.framework.application.LCCore;
 import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.synch.AsyncWork;
-import net.lecousin.framework.core.test.LCCoreAbstractTest;
+import net.lecousin.framework.network.http.client.HTTPClientConfiguration;
 import net.lecousin.framework.network.session.SessionInMemory;
+import net.lecousin.framework.network.test.AbstractNetworkTest;
 import net.lecousin.framework.web.WebServer;
 import net.lecousin.framework.web.WebServerConfig;
 import net.lecousin.framework.xml.serialization.XMLDeserializer;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-
-public abstract class AbstractTest extends LCCoreAbstractTest {
+public abstract class AbstractTest extends AbstractNetworkTest {
 
 	private static WebServer server;
 	
@@ -36,7 +37,9 @@ public abstract class AbstractTest extends LCCoreAbstractTest {
 		if (loadConfig.hasError())
 			throw loadConfig.getError();
 		server = new WebServer(null, new SessionInMemory(), 10 * 60 * 1000, true);
+		server.setSSLContext(sslTest);
 		server.setConfiguration(loadConfig.getResult());
+		HTTPClientConfiguration.defaultConfiguration.setSSLContext(sslTest);
 	}
 	
 	@AfterClass

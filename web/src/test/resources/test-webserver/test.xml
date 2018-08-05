@@ -119,6 +119,120 @@
 				</pre-filter>
 				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
 			</bundle>
+			
+			<bundle path="b1">
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireBooleanRight">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="rightName" value="b1"/>
+					<attribute name="rightValue" value="true"/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+
+				<bundle path="b2">
+					<pre-filter class="net.lecousin.framework.web.filters.security.RequireBooleanRight">
+						<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+						<attribute name="rightName" value="b2"/>
+						<attribute name="rightValue" value="true"/>
+					</pre-filter>
+					<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+				</bundle>
+
+				<bundle path="notb2">
+					<pre-filter class="net.lecousin.framework.web.filters.security.RequireBooleanRight">
+						<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+						<attribute name="rightName" value="b2"/>
+						<attribute name="rightValue" value="false"/>
+					</pre-filter>
+					<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+				</bundle>
+			</bundle>
+			
+			<bundle path="notb1">
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireBooleanRight">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="rightName" value="b1"/>
+					<attribute name="rightValue" value="false"/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+
+				<bundle path="b2">
+					<pre-filter class="net.lecousin.framework.web.filters.security.RequireBooleanRight">
+						<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+						<attribute name="rightName" value="b2"/>
+						<attribute name="rightValue" value="true"/>
+					</pre-filter>
+					<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+				</bundle>
+
+				<bundle path="notb2">
+					<pre-filter class="net.lecousin.framework.web.filters.security.RequireBooleanRight">
+						<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+						<attribute name="rightName" value="b2"/>
+						<attribute name="rightValue" value="false"/>
+					</pre-filter>
+					<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+				</bundle>
+			</bundle>
+			
+			<bundle path="b2">
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireBooleanRight">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="rightName" value="b2"/>
+					<attribute name="rightValue" value="true"/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+
+				<bundle path="b1">
+					<pre-filter class="net.lecousin.framework.web.filters.security.RequireBooleanRight">
+						<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+						<attribute name="rightName" value="b1"/>
+						<attribute name="rightValue" value="true"/>
+					</pre-filter>
+					<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+				</bundle>
+
+				<bundle path="notb1">
+					<pre-filter class="net.lecousin.framework.web.filters.security.RequireBooleanRight">
+						<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+						<attribute name="rightName" value="b1"/>
+						<attribute name="rightValue" value="false"/>
+					</pre-filter>
+					<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+				</bundle>
+			</bundle>
+			
+			<bundle path="i1_more_than_20">
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireIntegerRight">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="rightName" value="i1"/>
+					<attribute name="rightValues" value="[20-1000]"/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+			</bundle>
+			
+			<bundle path="i1_less_than_20">
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireIntegerRight">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="rightName" value="i1"/>
+					<attribute name="rightValues" value="[0-20["/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>
+			</bundle>
+			
+			<bundle path="session">
+				<pre-filter class="net.lecousin.framework.web.filters.security.StoreAuthenticationInSession">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="sessionParameter" ref="auth"/>
+				</pre-filter>
+				<pre-filter class="net.lecousin.framework.web.filters.security.LoadAuthenticationFromSession">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+					<attribute name="sessionParameter" ref="auth"/>
+				</pre-filter>
+				<pre-filter class="net.lecousin.framework.web.filters.security.RequireAuthentication">
+					<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+				</pre-filter>
+				<processor path="test1" class="net.lecousin.framework.web.test.Test1Processor"/>				
+			</bundle>
 		</bundle>
 	</bundle>
 	

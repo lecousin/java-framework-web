@@ -1,6 +1,7 @@
 package net.lecousin.framework.web.test.filters;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,6 +12,8 @@ import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.client.HTTPClientUtil;
 import net.lecousin.framework.network.http.exception.HTTPResponseError;
 import net.lecousin.framework.network.mime.MimeHeader;
+import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
+import net.lecousin.framework.network.mime.header.ParameterizedHeaderValues;
 import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.web.test.AbstractTest;
 
@@ -149,6 +152,61 @@ public class TestSecurityFilters extends AbstractTest {
 	public void testRole1and2() throws Exception {
 		testAccess("role1and2", true, false, false, false, false);
 	}
+
+	@Test(timeout=120000)
+	public void testB1() throws Exception {
+		testAccess("b1", true, true, false, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testB1B2() throws Exception {
+		testAccess("b1/b2", true, false, false, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testB1NotB2() throws Exception {
+		testAccess("b1/notb2", false, true, false, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testNotB1() throws Exception {
+		testAccess("notb1", false, false, false, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testNotB1B2() throws Exception {
+		testAccess("notb1/b2", false, false, false, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testNotB1NotB2() throws Exception {
+		testAccess("notb1/notb2", false, false, false, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testB2() throws Exception {
+		testAccess("b2", true, false, true, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testB2B1() throws Exception {
+		testAccess("b2/b1", true, false, false, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testB2NotB1() throws Exception {
+		testAccess("b2/notb1", false, false, false, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testI1MoreThan20() throws Exception {
+		testAccess("i1_more_than_20", true, false, false, false, false);
+	}
+
+	@Test(timeout=120000)
+	public void testI1LessThan20() throws Exception {
+		testAccess("i1_less_than_20", false, true, false, false, false);
+	}
 	
 	private static void testAccess(String path, boolean guillaume, boolean robert, boolean dupont, boolean durand, boolean nobody) throws Exception {
 		testAccess(path, null, nobody);
@@ -174,6 +232,51 @@ public class TestSecurityFilters extends AbstractTest {
 				throw new AssertionError("Access denied for user " + username + " on path " + path, e);
 			Assert.assertEquals(403, e.getStatusCode());
 		}
+	}
+	
+	@Test(timeout=60000)
+	public void testSession() throws Exception {
+		try {
+			HTTPClientUtil.GETfully(BASE_HTTP_URL + "/filters/security/session/test1", 0).blockResult(0);
+			throw new AssertionError("Error expected for unauthorized request");
+		} catch (HTTPResponseError e) {
+			Assert.assertEquals(403, e.getStatusCode());
+		}
+		
+		Pair<HTTPResponse, IO.Readable.Seekable> p;
+		String content;
+		String sessionId;
+		
+		// no session on http
+		p = HTTPClientUtil.GETfully(BASE_HTTP_URL + "/filters/security/session/test1?user=guillaume", 0).blockResult(0);
+		content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
+		Assert.assertEquals("This is test 1", content);
+		sessionId = p.getValue1().getCookie("lc-session");
+		Assert.assertNull(sessionId);
+
+		try {
+			HTTPClientUtil.GETfully(BASE_HTTPS_URL + "/filters/security/session/test1", 0).blockResult(0);
+			throw new AssertionError("Error expected for unauthorized request");
+		} catch (HTTPResponseError e) {
+			Assert.assertEquals(403, e.getStatusCode());
+		}
+		p = HTTPClientUtil.GETfully(BASE_HTTPS_URL + "/filters/security/session/test1?user=guillaume", 0).blockResult(0);
+		content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
+		Assert.assertEquals("This is test 1", content);
+		sessionId = p.getValue1().getCookie("lc-session");
+		Assert.assertNotNull(sessionId);
+	
+		// no session on http
+		try {
+			HTTPClientUtil.GETfully(BASE_HTTP_URL + "/filters/security/session/test1", 0, new MimeHeader("Cookie", "lc-session=" + sessionId)).blockResult(0);
+			throw new AssertionError("Error expected for unauthorized request");
+		} catch (HTTPResponseError e) {
+			Assert.assertEquals(403, e.getStatusCode());
+		}
+		
+		p = HTTPClientUtil.GETfully(BASE_HTTPS_URL + "/filters/security/session/test1", 0, new MimeHeader("Cookie", "lc-session=" + sessionId)).blockResult(0);
+		content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
+		Assert.assertEquals("This is test 1", content);
 	}
 	
 }
