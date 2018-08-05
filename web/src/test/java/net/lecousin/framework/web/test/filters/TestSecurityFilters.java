@@ -1,7 +1,6 @@
 package net.lecousin.framework.web.test.filters;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,8 +11,6 @@ import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.client.HTTPClientUtil;
 import net.lecousin.framework.network.http.exception.HTTPResponseError;
 import net.lecousin.framework.network.mime.MimeHeader;
-import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
-import net.lecousin.framework.network.mime.header.ParameterizedHeaderValues;
 import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.web.test.AbstractTest;
 
@@ -215,6 +212,7 @@ public class TestSecurityFilters extends AbstractTest {
 		testAccess(path, "dupont", dupont);
 		testAccess(path, "durand", durand);
 		testAccess(path, "nobody", nobody);
+		testAccess(path, "root", true);
 	}
 	
 	private static void testAccess(String path, String username, boolean accessExpected) throws Exception {

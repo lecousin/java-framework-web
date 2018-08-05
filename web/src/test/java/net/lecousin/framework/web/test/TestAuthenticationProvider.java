@@ -64,6 +64,9 @@ public class TestAuthenticationProvider implements IAuthenticationProvider {
 		
 		user = new TestAuth("durand");
 		users.put("durand", user);
+		
+		user = new TestAuth("root");
+		users.put("root", user);
 	}
 	
 	private Map<String, TestAuth> users = new HashMap<>();
@@ -85,7 +88,7 @@ public class TestAuthenticationProvider implements IAuthenticationProvider {
 		
 		@Override
 		public boolean isSuperAdmin() {
-			return false;
+			return "root".equals(username);
 		}
 
 		@Override
@@ -101,11 +104,6 @@ public class TestAuthenticationProvider implements IAuthenticationProvider {
 		@Override
 		public Map<String, Integer> getIntegerRights() {
 			return integerRights;
-		}
-		
-		@Override
-		public Object getDescriptor() {
-			return this;
 		}
 	}
 	

@@ -235,6 +235,23 @@
 			</bundle>
 		</bundle>
 	</bundle>
+
+	<bundle path="security">
+		<Injection xmlns="http://code.lecousin.net/java/net.lecousin.framework.injection/0.1">
+			<Singleton id="testAuthenticationProvider" type="net.lecousin.framework.web.security.IAuthenticationProvider">
+				<class name="net.lecousin.framework.web.test.TestAuthenticationProvider"/>
+			</Singleton>
+		</Injection>
+
+		<pre-filter class="net.lecousin.framework.web.filters.security.GetLoginFromQuery">
+			<attribute name="usernameParameter" value="user"/>
+			<attribute name="passwordParameter" value="pass"/>
+		</pre-filter>
+		<pre-filter class="net.lecousin.framework.web.filters.security.RequireAuthentication">
+			<attribute name="authenticationProvider" ref="testAuthenticationProvider"/>
+		</pre-filter>
+		<processor path="test" class="net.lecousin.framework.web.test.security.TestSecurityProcessor"/>	
+	</bundle>
 	
 	<bundle path="services">
 		<Injection xmlns="http://code.lecousin.net/java/net.lecousin.framework.injection/0.1">
