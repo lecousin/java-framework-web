@@ -32,48 +32,6 @@
         <dependent-module archiveName="net-lecousin-framework-json-0.2.0.jar" deploy-path="/" handle="module:/resource/net.lecousin.framework.json/net.lecousin.framework.json">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="com-github-everit-org-json-schema-org.everit.json.schema-1.6.1.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/github/everit-org/json-schema/org.everit.json.schema/1.6.1/org.everit.json.schema-1.6.1.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="org-json-json-20171018.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/org/json/json/20171018/json-20171018.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="com-google-guava-guava-22.0.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/google/guava/guava/22.0/guava-22.0.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="com-google-code-findbugs-jsr305-1.3.9.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/google/code/findbugs/jsr305/1.3.9/jsr305-1.3.9.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="com-google-errorprone-error_prone_annotations-2.0.18.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/google/errorprone/error_prone_annotations/2.0.18/error_prone_annotations-2.0.18.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="com-google-j2objc-j2objc-annotations-1.1.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/google/j2objc/j2objc-annotations/1.1/j2objc-annotations-1.1.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="org-codehaus-mojo-animal-sniffer-annotations-1.14.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/org/codehaus/mojo/animal-sniffer-annotations/1.14/animal-sniffer-annotations-1.14.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="commons-validator-commons-validator-1.6.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-validator/commons-validator/1.6/commons-validator-1.6.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="commons-beanutils-commons-beanutils-1.9.2.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-beanutils/commons-beanutils/1.9.2/commons-beanutils-1.9.2.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="commons-digester-commons-digester-1.8.1.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-digester/commons-digester/1.8.1/commons-digester-1.8.1.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="commons-logging-commons-logging-1.2.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-logging/commons-logging/1.2/commons-logging-1.2.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="commons-collections-commons-collections-3.2.2.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/commons-collections/commons-collections/3.2.2/commons-collections-3.2.2.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="com-damnhandy-handy-uri-templates-2.1.6.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/com/damnhandy/handy-uri-templates/2.1.6/handy-uri-templates-2.1.6.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="joda-time-joda-time-2.9.4.jar" deploy-path="/" handle="module:/classpath/var/M2_REPO/joda-time/joda-time/2.9.4/joda-time-2.9.4.jar">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
         <dependent-module archiveName="net-lecousin-core.javaee-0.13.3.jar" deploy-path="/" handle="module:/resource/net.lecousin.core.javaee/net.lecousin.core.javaee">
             <dependency-type>uses</dependency-type>
         </dependent-module>

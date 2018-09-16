@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import net.lecousin.framework.application.LCCore;
 import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.concurrent.synch.ISynchronizationPoint;
@@ -29,6 +30,7 @@ import net.lecousin.framework.io.out2in.OutputToInputBuffers;
 import net.lecousin.framework.io.serialization.Serializer;
 import net.lecousin.framework.io.serialization.TypeDefinition;
 import net.lecousin.framework.json.JSONSerializer;
+import net.lecousin.framework.log.Logger;
 import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.exception.HTTPResponseError;
@@ -54,14 +56,10 @@ import net.lecousin.framework.web.services.WebServiceProvider;
 import net.lecousin.framework.web.services.WebServiceUtils;
 import net.lecousin.framework.web.services.rest.REST.Id;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 public class RESTWebServiceProvider implements WebServiceProvider {
 	
-	private static final Log logger = LogFactory.getLog(RESTWebServiceProvider.class);
-
 	public RESTWebServiceProvider(WebResourcesBundle bundle, REST rest) throws Exception {
+		this.logger = LCCore.getApplication().getLoggerFactory().getLogger(RESTWebServiceProvider.class);
 		this.bundle = bundle;
 		this.rest = rest;
 		resource = rest.getClass().getAnnotation(REST.Resource.class);
@@ -73,9 +71,10 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 		parseService(bundle);
 	}
 	
-	@Inject
+	@Inject(required=false)
 	private IAuthenticationProvider authenticationProvider;
-	
+
+	private Logger logger;
 	private WebResourcesBundle bundle;
 	private REST rest;
 	private REST.Resource resource;
@@ -317,7 +316,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 			subResources.add(rm);
 		}
 		
-		if (logger.isDebugEnabled()) {
+		if (logger.debug()) {
 			StringBuilder s = new StringBuilder();
 			s.append("REST Service loaded: ").append(rest.getClass().getName()).append("\r\n");
 			for (RestMethod rm : getMethods)
@@ -841,7 +840,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 	}
 	
 	@SuppressWarnings("resource")
-	private static void success(Object result, TypeDefinition expectedType, WebRequest request, WebResourcesBundle bundle, SynchronizationPoint<Exception> sp) {
+	private void success(Object result, TypeDefinition expectedType, WebRequest request, WebResourcesBundle bundle, SynchronizationPoint<Exception> sp) {
 		if (result == null && (Void.class.equals(expectedType.getBase()) || void.class.equals(expectedType.getBase()))) {
 			// nothing returned
 			request.getResponse().setStatus(200);
@@ -855,6 +854,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 			for (MimeHeader h : mime.getHeaders())
 				request.getResponse().getMIME().addHeader(h);
 			request.getResponse().getMIME().setBodyToSend(mime.getBodyToSend());
+			request.getResponse().setStatus(200);
 			HTTPServerProtocol.handleRangeRequest(request.getRequest(), request.getResponse());
 			sp.unblock();
 			return;

@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import net.lecousin.framework.application.LCCore;
 import net.lecousin.framework.collections.CollectionsUtil;
 import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.Threading;
@@ -21,6 +22,7 @@ import net.lecousin.framework.injection.InjectionContext;
 import net.lecousin.framework.io.IO;
 import net.lecousin.framework.io.IOFromOutputStream;
 import net.lecousin.framework.io.IOUtil;
+import net.lecousin.framework.log.Logger;
 import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.network.http.HTTPRequest.Method;
 import net.lecousin.framework.network.http.HTTPRequest.Protocol;
@@ -32,21 +34,18 @@ import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebResourcesBundle;
 import net.lecousin.framework.web.WebSessionProvider;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 public class WebResourcesBundleServlet implements Servlet {
 
 	public static final String ATTRIBUTE_HTTPSERVLETREQUEST = "javax.servlet.HttpServletRequest";
 	
-	private static final Log logger = LogFactory.getLog(WebResourcesBundleServlet.class);
-	
+	protected Logger logger;
 	protected ServletConfig config;
 	protected InjectionContext injection;
 	protected WebResourcesBundle bundle;
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {
+		this.logger = LCCore.getApplication().getLoggerFactory().getLogger(WebResourcesBundleServlet.class);
 		this.config = config;
 		bundle = new WebResourcesBundle(injection);
 		String filename = config.getInitParameter("configFile");
@@ -109,7 +108,7 @@ public class WebResourcesBundleServlet implements Servlet {
 					public void run() {
 						if (sp.hasError()) {
 							Exception err = sp.getError();
-							logger.error(err);
+							logger.error("Error processing request", err);
 							try {
 								if (err instanceof HTTPError) {
 									HTTPError r = (HTTPError)err;
