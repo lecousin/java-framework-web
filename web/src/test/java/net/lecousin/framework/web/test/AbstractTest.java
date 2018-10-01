@@ -36,7 +36,7 @@ public abstract class AbstractTest extends AbstractNetworkTest {
 		loadConfig.block(0);
 		if (loadConfig.hasError())
 			throw loadConfig.getError();
-		server = new WebServer(null, new SessionInMemory(), 10 * 60 * 1000, true);
+		server = new WebServer(null, new SessionInMemory(10 * 60 * 1000), true);
 		server.setSSLContext(sslTest);
 		server.setConfiguration(loadConfig.getResult());
 		HTTPClientConfiguration.defaultConfiguration.setSSLContext(sslTest);

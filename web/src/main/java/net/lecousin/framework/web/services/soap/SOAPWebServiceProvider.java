@@ -27,10 +27,13 @@ import net.lecousin.framework.io.buffering.SimpleBufferedWritable;
 import net.lecousin.framework.io.out2in.OutputToInputBuffers;
 import net.lecousin.framework.io.serialization.TypeDefinition;
 import net.lecousin.framework.log.Logger;
+import net.lecousin.framework.math.FragmentedRangeLong;
+import net.lecousin.framework.math.RangeLong;
 import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.exception.HTTPError;
 import net.lecousin.framework.network.http.exception.HTTPResponseError;
+import net.lecousin.framework.network.http.server.HTTPServerResponse;
 import net.lecousin.framework.network.mime.MimeUtil;
 import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
 import net.lecousin.framework.network.server.TCPServerClient;
@@ -38,10 +41,10 @@ import net.lecousin.framework.network.session.Session;
 import net.lecousin.framework.util.ClassUtil;
 import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.web.WebRequest;
-import net.lecousin.framework.web.WebRequestProcessor;
 import net.lecousin.framework.web.WebResourcesBundle;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
+import net.lecousin.framework.web.security.IRightsManager;
 import net.lecousin.framework.web.services.WebService;
 import net.lecousin.framework.web.services.WebServiceProvider;
 import net.lecousin.framework.web.services.WebServiceUtils;
@@ -54,14 +57,13 @@ import net.lecousin.framework.xml.dom.XMLDocument;
 import net.lecousin.framework.xml.dom.XMLElement;
 import net.lecousin.framework.xml.serialization.XMLDeserializer;
 
-public class SOAPWebServiceProvider implements WebServiceProvider {
+public class SOAPWebServiceProvider extends WebServiceProvider<SOAP> {
 	
 	public SOAPWebServiceProvider(WebResourcesBundle bundle, SOAP soap) throws Exception {
+		super(bundle, soap);
 		logger = LCCore.getApplication().getLoggerFactory().getLogger(SOAPWebServiceProvider.class);
-		this.bundle = bundle;
-		this.soap = soap;
-		service = soap.getClass().getAnnotation(SOAP.Service.class);
-		if (service == null)
+		serviceDeclaration = soap.getClass().getAnnotation(SOAP.Service.class);
+		if (serviceDeclaration == null)
 			throw new Exception("Class "+soap.getClass().getName()+" must have the SOAP.Service annotation");
 		
 		for (Method m : soap.getClass().getDeclaredMethods()) {
@@ -103,13 +105,13 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 		}
 	}
 	
-	@Inject
+	@Inject(required = false)
 	private IAuthenticationProvider authenticationProvider;
+	@Inject(required = false)
+	private IRightsManager rightsManager;
 	
 	private final Logger logger;
-	WebResourcesBundle bundle;
-	SOAP soap;
-	SOAP.Service service;
+	SOAP.Service serviceDeclaration;
 	HashMap<String, Operation> operations = new HashMap<>();
 	private WebService.RequireRole[] globalRoles;
 	private WebService.RequireBooleanRight[] globalBooleanRights;
@@ -126,30 +128,15 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 	}
 	
 	@Override
-	public WebResourcesBundle getParent() {
-		return bundle;
-	}
-	
-	@Override
-	public void setParent(WebRequestProcessor parent) {
-		throw new IllegalStateException("setParent cannot be called on a web service provider");
-	}
-	
-	@Override
 	public String getServiceTypeName() {
 		return "SOAP";
 	}
 	
 	@Override
 	public String getDefaultPath() {
-		return service.defaultPath();
+		return serviceDeclaration.defaultPath();
 	}
 
-	@Override
-	public SOAP getWebService() {
-		return soap;
-	}
-	
 	@Override
 	public List<OperationDescription> getOperations() {
 		ArrayList<OperationDescription> list = new ArrayList<>(operations.size());
@@ -197,7 +184,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 
 	@SuppressWarnings("resource")
 	@Override
-	public ISynchronizationPoint<?> process(Object fromCheck, WebRequest request) {
+	protected ISynchronizationPoint<?> processServiceRequest(Object fromCheck, WebRequest request) {
 		if (!(fromCheck instanceof Operation))
 			return processDocRequest(request);
 		Operation op = (Operation)fromCheck;
@@ -472,7 +459,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 				call.params[i] = request;
 			else if (type.isAssignableFrom(HTTPRequest.class))
 				call.params[i] = request.getRequest();
-			else if (type.isAssignableFrom(HTTPResponse.class))
+			else if (type.isAssignableFrom(HTTPServerResponse.class))
 				call.params[i] = request.getResponse();
 			else if (type.isAssignableFrom(Session.class))
 				call.params[i] = request.getSession(true);
@@ -558,6 +545,11 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 				sp.unblock();
 				return;
 			}
+			if (rightsManager == null) {
+				internalError("No rights manager, but authentication needed by this service", request);
+				sp.unblock();
+				return;
+			}
 			AsyncWork<IAuthentication, Exception> auth = request.authenticate(authenticationProvider);
 			if (auth.isUnblocked()) {
 				if (auth.hasError()) {
@@ -589,37 +581,37 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 
 	private void callOperation(Operation op, MethodCall call, IAuthentication auth, XMLStreamReaderAsync xml, WebRequest request, SynchronizationPoint<Exception> sp, LinkedList<XMLStreamEventsRecorder.Async> headers) {
 		for (WebService.RequireRole role : globalRoles)
-			if (auth == null || !auth.hasRole(role.value())) {
+			if (auth == null || !rightsManager.hasRole(auth, role.value())) {
 				forbidden(request);
 				sp.unblock();
 				return;
 			}
 		for (WebService.RequireRole role : op.specificRoles)
-			if (auth == null || !auth.hasRole(role.value())) {
+			if (auth == null || !rightsManager.hasRole(auth, role.value())) {
 				forbidden(request);
 				sp.unblock();
 				return;
 			}
 		for (WebService.RequireBooleanRight right : globalBooleanRights)
-			if (auth == null || !auth.hasRight(right.name(), right.value())) {
+			if (auth == null || !rightsManager.hasRight(auth, right.name(), right.value())) {
 				forbidden(request);
 				sp.unblock();
 				return;
 			}
 		for (WebService.RequireBooleanRight right : op.specificBooleanRights)
-			if (auth == null || !auth.hasRight(right.name(), right.value())) {
+			if (auth == null || !rightsManager.hasRight(auth, right.name(), right.value())) {
 				forbidden(request);
 				sp.unblock();
 				return;
 			}
 		for (WebService.RequireIntegerRight right : globalIntegerRights)
-			if (auth == null || !auth.hasRight(right.name(), right.value())) {
+			if (auth == null || !rightsManager.hasRight(auth, right.name(), new FragmentedRangeLong(new RangeLong(right.value(), right.value())))) {
 				forbidden(request);
 				sp.unblock();
 				return;
 			}
 		for (WebService.RequireIntegerRight right : op.specificIntegerRights)
-			if (auth == null || !auth.hasRight(right.name(), right.value())) {
+			if (auth == null || !rightsManager.hasRight(auth, right.name(), new FragmentedRangeLong(new RangeLong(right.value(), right.value())))) {
 				forbidden(request);
 				sp.unblock();
 				return;
@@ -656,7 +648,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 				} else {
 					body = new XMLDeserializer(
 						xml,
-						service.targetNamespace() + "Request",
+						serviceDeclaration.targetNamespace() + "Request",
 						paramsDef[call.bodyIndex].getType().getSimpleName()
 					).deserializeValue(null, new TypeDefinition(null, call.bodyField != null ? call.bodyField.getGenericType() : paramsDef[call.bodyIndex].getParameterizedType()), "SOAPBody", bundle.getSerializationRules());
 				}
@@ -682,7 +674,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 						} else {
 							new XMLDeserializer(
 								xml,
-								service.targetNamespace() + "Request",
+								serviceDeclaration.targetNamespace() + "Request",
 								paramsDef[call.bodyIndex].getType().getSimpleName()
 							).deserializeValue(null, new TypeDefinition(null, call.bodyField != null ? call.bodyField.getGenericType() : paramsDef[call.bodyIndex].getParameterizedType()), "SOAPBody", bundle.getSerializationRules())
 							.listenInline(body);
@@ -738,7 +730,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 			Event e = recorder.getFirstRecordedEvent();
 			if (!e.localName.equals(h.localName())) continue;
 			String namespaceURI = h.namespaceURI();
-			if (namespaceURI.length() == 0) namespaceURI = service.targetNamespace();
+			if (namespaceURI.length() == 0) namespaceURI = serviceDeclaration.targetNamespace();
 			if (!e.namespaceURI.equals(namespaceURI)) continue;
 			header = recorder;
 			break;
@@ -775,7 +767,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 				if (sp.isCancelled()) return null;
 				try {
 					Object result;
-					try { result = call.method.invoke(soap, call.params); }
+					try { result = call.method.invoke(service, call.params); }
 					catch (InvocationTargetException e) {
 						e.printStackTrace(); // TODO
 						Throwable err = e.getTargetException();
@@ -836,11 +828,11 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 		if (sp.isCancelled()) return;
 		// build the response object
 		SOAPMessageContent response = new SOAPMessageContent();
-		response.bodyNamespaceURI = service.targetNamespace() + "Response";
+		response.bodyNamespaceURI = serviceDeclaration.targetNamespace() + "Response";
 		if (result != null) {
 			if (result.getClass().getAnnotation(SOAP.Message.class) != null) {
 				// The class declares headers and body
-				try { SOAPUtil.createContentFromMessage(result, response, service.targetNamespace()); }
+				try { SOAPUtil.createContentFromMessage(result, response, serviceDeclaration.targetNamespace()); }
 				catch (Throwable e) {
 					logger.error("Error creating SOAP message", e);
 					internalError("Unable to create response message", request);
@@ -900,7 +892,7 @@ public class SOAPWebServiceProvider implements WebServiceProvider {
 	private void error(int code, String message, boolean serverError, WebRequest request) {
 		OutputToInputBuffers out = initSendMessage(code, request);
 		SimpleBufferedWritable bout = new SimpleBufferedWritable(out, 4096);
-		XMLWriter writer = new XMLWriter(bout, StandardCharsets.UTF_8, true);
+		XMLWriter writer = new XMLWriter(bout, StandardCharsets.UTF_8, true, false);
 		SOAPUtil.openEnvelope(writer, null);
 		SOAPUtil.openBody(writer);
 		writer.openElement(SOAPUtil.SOAP_NS, "Fault", null);

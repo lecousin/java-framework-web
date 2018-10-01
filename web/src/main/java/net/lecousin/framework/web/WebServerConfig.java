@@ -3,6 +3,8 @@ package net.lecousin.framework.web;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import net.lecousin.framework.io.serialization.annotations.TypeSerializer;
+import net.lecousin.framework.network.NetUtil;
 import net.lecousin.framework.network.ssl.SSLContextConfig;
 import net.lecousin.framework.util.Pair;
 
@@ -34,11 +36,11 @@ public class WebServerConfig {
 			this.port = port;
 			this.secure = secure;
 		}
-		public ListeningPort(String ip, int port) {
+		public ListeningPort(byte[] ip, int port) {
 			ipAddresses.add(ip);
 			this.port = port;
 		}
-		public ListeningPort(String ip, int port, boolean secure) {
+		public ListeningPort(byte[] ip, int port, boolean secure) {
 			ipAddresses.add(ip);
 			this.port = port;
 			this.secure = secure;
@@ -47,7 +49,8 @@ public class WebServerConfig {
 		/** Specific MAC address of a network interface, null or empty mean all. */
 		public String macAddress = null;
 		/** List of IP addresses, using IPv4 or IPv6 notation, null or empty means all. */
-		public ArrayList<String> ipAddresses = new ArrayList<>();
+		@TypeSerializer(NetUtil.IPSerializer.class)
+		public ArrayList<byte[]> ipAddresses = new ArrayList<>();
 		/** True to activate SSL layer (HTTPS instead of HTTP). */
 		public boolean secure = false;
 		/** Port to listen to, 0 or negative value means default port (80 or 443). */

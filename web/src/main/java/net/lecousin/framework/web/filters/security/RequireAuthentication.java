@@ -36,7 +36,7 @@ public class RequireAuthentication implements WebRequestFilter {
 				IAuthentication a = auth.getResult();
 				if (a == null) {
 					// not authenticated
-					request.getResponse().setStatus(403, "You must be authenticated for this request");
+					request.getResponse().setStatus(401, "You must be authenticated for this request");
 					result.unblockSuccess(FilterResult.STOP_PROCESSING);
 					return null;
 				}

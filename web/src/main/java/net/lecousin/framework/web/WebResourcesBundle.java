@@ -2,6 +2,7 @@ package net.lecousin.framework.web;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,10 +20,11 @@ import net.lecousin.framework.concurrent.synch.SynchronizationPoint;
 import net.lecousin.framework.exception.NoException;
 import net.lecousin.framework.injection.Injection;
 import net.lecousin.framework.injection.InjectionContext;
-import net.lecousin.framework.injection.InjectionXmlConfiguration;
 import net.lecousin.framework.injection.ObjectAttribute;
-import net.lecousin.framework.injection.ObjectMethod;
+import net.lecousin.framework.injection.ObjectValue;
 import net.lecousin.framework.injection.Singleton;
+import net.lecousin.framework.injection.xml.InjectionXmlConfiguration;
+import net.lecousin.framework.injection.xml.InjectionXmlParser01;
 import net.lecousin.framework.io.FileIO;
 import net.lecousin.framework.io.IO;
 import net.lecousin.framework.io.serialization.Deserializer;
@@ -41,6 +43,7 @@ import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.util.Provider;
 import net.lecousin.framework.util.Triple;
 import net.lecousin.framework.util.UnprotectedStringBuffer;
+import net.lecousin.framework.web.services.WebService;
 import net.lecousin.framework.web.services.WebServiceProvider;
 import net.lecousin.framework.web.services.WebServiceProviderPlugin;
 import net.lecousin.framework.web.services.WebServiceProviders;
@@ -153,6 +156,27 @@ public class WebResourcesBundle implements WebRequestProcessor {
 	public void addProcessor(String path, WebRequestProcessor processor) {
 		processor.setParent(this);
 		processors.add(new Pair<>(path, processor));
+	}
+	
+	public void addService(String path, WebService service) throws Exception {
+		InjectionContext ctx = getInjectionContext();
+		
+		List<WebServiceProviderPlugin> plugins = ExtensionPoints.getExtensionPoint(WebServiceProviders.class).getPluginsFor(service.getClass());
+		if (plugins.isEmpty())
+			throw new Exception("No WebServiceProvider available for web service class " + service.getClass().getName());
+		
+		Injection.inject(ctx, service);
+		
+		for (WebServiceProviderPlugin plugin : plugins) {
+			WebServiceProvider<?> provider = plugin.createProvider(this, service);
+			Injection.inject(ctx, provider);
+	
+			if (path == null)
+				path = provider.getDefaultPath();
+			if (!path.isEmpty() && !path.endsWith("/"))
+				path += "/";
+			processors.add(new Pair<>(path, provider));
+		}
 	}
 	
 	public List<Pair<String, WebRequestProcessor>> getProcessors() {
@@ -452,6 +476,9 @@ public class WebResourcesBundle implements WebRequestProcessor {
 			} else if (xml.event.text.equals("service")) {
 				configureService(xml, app);
 				if (!xml.nextInnerElement(elem)) return;
+			} else if (xml.event.text.equals("services")) {
+				configureServices(xml, app);
+				if (!xml.nextInnerElement(elem)) return;
 			} else
 				break;
 		} while (true);
@@ -476,92 +503,45 @@ public class WebResourcesBundle implements WebRequestProcessor {
 	}
 	
 	private WebRequestFilter configureFilter(XMLStreamReader xml, Application app) throws Exception {
-		String className = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("class"));
-		if (className == null)
-			throw new Exception("Missing attribute class on element filter");
-		Class<?> cl = app.getClassLoader().loadClass(className);
-		if (!WebRequestFilter.class.isAssignableFrom(cl))
-			throw new Exception("Invalid filter class, it must implement WebRequestFilter: " + className);
 		String id = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("id"));
-		List<ObjectAttribute> attrs = new LinkedList<>();
-		ObjectMethod initMethod = null;
-		if (!xml.event.isClosed) {
-			ElementContext elem = xml.event.context.getFirst();
-			while (xml.nextInnerElement(elem)) {
-				if (xml.event.text.equals("attribute"))
-					attrs.add(InjectionXmlConfiguration.readObjectAttribute01(getInjectionContext(), xml, app));
-				else if (xml.event.text.equals("init-method"))
-					initMethod = InjectionXmlConfiguration.readObjectMethod01(xml);
-				else
-					throw new Exception("Unexpected element " + xml.event.text.asString() + " in filter");
-			}
-		}
-		WebRequestFilter filter = (WebRequestFilter)Injection.create(getInjectionContext(), cl, initMethod, attrs);
-		if (id != null) getInjectionContext().add(new Singleton(cl, filter, id));
+		InjectionContext ctx = getInjectionContext();
+		ObjectValue filterValue = InjectionXmlParser01.readObjectValue(ctx, xml, app);
+		WebRequestFilter filter = filterValue.create(ctx, WebRequestFilter.class, null, new Annotation[0]);
+		if (id != null) ctx.add(new Singleton(ctx, WebRequestFilter.class, filter, id, null));
 		return filter;
 	}
 	
 	private Object configureCustomFilter(XMLStreamReader xml, Application app) throws Exception {
-		String className = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("class"));
-		if (className == null)
-			throw new Exception("Missing attribute class on element custom-filter");
-		Class<?> cl = app.getClassLoader().loadClass(className);
 		String id = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("id"));
-		List<ObjectAttribute> attrs = new LinkedList<>();
-		ObjectMethod initMethod = null;
-		if (!xml.event.isClosed) {
-			ElementContext elem = xml.event.context.getFirst();
-			while (xml.nextInnerElement(elem)) {
-				if (xml.event.text.equals("attribute"))
-					attrs.add(InjectionXmlConfiguration.readObjectAttribute01(getInjectionContext(), xml, app));
-				else if (xml.event.text.equals("init-method"))
-					initMethod = InjectionXmlConfiguration.readObjectMethod01(xml);
-				else
-					throw new Exception("Unexpected element " + xml.event.text.asString() + " in filter");
-			}
-		}
-		Object filter = Injection.create(getInjectionContext(), cl, initMethod, attrs);
-		if (id != null) getInjectionContext().add(new Singleton(cl, filter, id));
+		InjectionContext ctx = getInjectionContext();
+		ObjectValue filterValue = InjectionXmlParser01.readObjectValue(ctx, xml, app);
+		Object filter = filterValue.create(ctx, Object.class, null, new Annotation[0]);
+		if (id != null) ctx.add(new Singleton(ctx, filter.getClass(), filter, id, null));
 		return filter;
 	}
 	
 	private Pair<String, WebRequestProcessor> configureProcessor(XMLStreamReader xml, Application app) throws Exception {
-		String path = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("path"));
+		InjectionContext ctx = getInjectionContext();
+		String path = Injection.resolveProperties(ctx, app, xml.getAttributeValueByLocalName("path"));
 		if (path == null)
 			throw new Exception("Missing path attribute on element " + xml.event.text.asString());
 		if (!path.isEmpty() && !path.endsWith("/"))
 			path += "/";
-		String id = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("id"));
+		String id = Injection.resolveProperties(ctx, app, xml.getAttributeValueByLocalName("id"));
+		
 		if (xml.event.text.equals("bundle")) {
 			WebResourcesBundle bundle = new WebResourcesBundle();
 			bundle.setParent(this);
 			bundle.configure(xml);
-			if (id != null) getInjectionContext().add(new Singleton(WebResourcesBundle.class, bundle, id));
+			if (id != null) ctx.add(new Singleton(ctx, WebResourcesBundle.class, bundle, id, null));
 			return new Pair<>(path, bundle);
 		}
-		String className = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("class"));
-		if (className == null)
-			throw new Exception("Missing attribute class on element " + xml.event.text.asString());
-		Class<?> cl = app.getClassLoader().loadClass(className);
-		if (!WebRequestProcessor.class.isAssignableFrom(cl))
-			throw new Exception("Invalid processor class, it must implement WebRequestProcessor: " + className);
+		
 		String config = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("config"));
-		List<ObjectAttribute> attrs = new LinkedList<>();
-		ObjectMethod initMethod = null;
-		if (!xml.event.isClosed) {
-			ElementContext elem = xml.event.context.getFirst();
-			while (xml.nextInnerElement(elem)) {
-				if (xml.event.text.equals("attribute"))
-					attrs.add(InjectionXmlConfiguration.readObjectAttribute01(getInjectionContext(), xml, app));
-				else if (xml.event.text.equals("init-method"))
-					initMethod = InjectionXmlConfiguration.readObjectMethod01(xml);
-				else
-					throw new Exception("Unexpected element " + xml.event.text.asString() + " in processor");
-			}
-		}
-		WebRequestProcessor processor = (WebRequestProcessor)Injection.create(getInjectionContext(), cl, initMethod, attrs);
+		ObjectValue value = InjectionXmlParser01.readObjectValue(ctx, xml, app);
+		WebRequestProcessor processor = value.create(ctx, WebRequestProcessor.class, null, new Annotation[0]);
 		processor.setParent(this);
-		if (id != null) getInjectionContext().add(new Singleton(cl, processor, id));
+		if (id != null) ctx.add(new Singleton(ctx, WebRequestProcessor.class, processor, id, null));
 		if (config != null)
 			processor.configure(config);
 		return new Pair<>(path, processor);
@@ -578,7 +558,7 @@ public class WebResourcesBundle implements WebRequestProcessor {
 			ElementContext elem = xml.event.context.getFirst();
 			while (xml.nextInnerElement(elem)) {
 				if (xml.event.text.equals("attribute"))
-					attrs.add(InjectionXmlConfiguration.readObjectAttribute01(getInjectionContext(), xml, app));
+					attrs.add(InjectionXmlParser01.readObjectAttribute(getInjectionContext(), xml, app));
 				else
 					throw new Exception("Unexpected element " + xml.event.text.asString() + " in processor");
 			}
@@ -588,8 +568,9 @@ public class WebResourcesBundle implements WebRequestProcessor {
 	}
 	
 	private void configureService(XMLStreamReader xml, Application app) throws Exception {
-		String path = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("path"));
-		String className = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("class"));
+		InjectionContext ctx = getInjectionContext();
+		String path = Injection.resolveProperties(ctx, app, xml.getAttributeValueByLocalName("path"));
+		String className = Injection.resolveProperties(ctx, app, xml.getAttributeValueByLocalName("class"));
 		if (className == null)
 			throw new Exception("Missing attribute class on element service");
 		Class<?> cl = app.getClassLoader().loadClass(className);
@@ -599,14 +580,14 @@ public class WebResourcesBundle implements WebRequestProcessor {
 			throw new Exception("No WebServiceProvider available for web service class " + className);
 		
 		Object service = cl.newInstance();
-		Injection.inject(getInjectionContext(), service);
+		Injection.inject(ctx, service);
 		
-		String id = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("id"));
-		if (id != null) getInjectionContext().add(new Singleton(cl, service, id));
+		String id = Injection.resolveProperties(ctx, app, xml.getAttributeValueByLocalName("id"));
+		if (id != null) ctx.add(new Singleton(ctx, cl, service, id, null));
 
 		for (WebServiceProviderPlugin plugin : plugins) {
 			WebServiceProvider provider = plugin.createProvider(this, service);
-			Injection.inject(getInjectionContext(), provider);
+			Injection.inject(ctx, provider);
 	
 			if (path == null)
 				path = provider.getDefaultPath();
@@ -615,57 +596,51 @@ public class WebResourcesBundle implements WebRequestProcessor {
 			processors.add(new Pair<>(path, provider));
 		}
 	}
+
+	private void configureServices(XMLStreamReader xml, Application app) throws Exception {
+		InjectionContext ctx = getInjectionContext();
+		String pkgName = Injection.resolveProperties(ctx, app, xml.getAttributeValueByLocalName("package"));
+		app.getLibrariesManager().scanLibraries(pkgName, false, null, null, (cl) -> {
+			List<WebServiceProviderPlugin> plugins = ExtensionPoints.getExtensionPoint(WebServiceProviders.class).getPluginsFor(cl);
+			if (plugins.isEmpty())
+				return;
+			
+			try {
+				Object service = cl.newInstance();
+				Injection.inject(ctx, service);
+				
+				for (WebServiceProviderPlugin plugin : plugins) {
+					WebServiceProvider provider = plugin.createProvider(this, service);
+					Injection.inject(ctx, provider);
+			
+					String path = provider.getDefaultPath();
+					if (!path.isEmpty() && !path.endsWith("/"))
+						path += "/";
+					processors.add(new Pair<>(path, provider));
+				}
+			} catch (Exception e) {
+				app.getLoggerFactory().getLogger(WebResourcesBundle.class).error("Error creating service class " + cl.getName(), e);
+			}
+		});
+	}
 	
 	private Pair<String, WebSocketRouter> configureWebSocketRouter(XMLStreamReader xml, Application app) throws Exception {
-		String path = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("path"));
+		InjectionContext ctx = getInjectionContext();
+		String path = Injection.resolveProperties(ctx, app, xml.getAttributeValueByLocalName("path"));
 		if (path == null) path = "";
 		if (path.length() > 0 && !path.endsWith("/")) path += "/";
-		String className = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("class"));
-		if (className == null)
-			throw new Exception("Missing attribute class on element " + xml.event.text.asString());
-		Class<?> cl = app.getClassLoader().loadClass(className);
-		if (!WebRequestRouter.class.isAssignableFrom(cl))
-			throw new Exception("Invalid WebSocketRouter class: " + className);
 		String id = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("id"));
-		List<ObjectAttribute> attrs = new LinkedList<>();
-		ObjectMethod initMethod = null;
-		if (!xml.event.isClosed) {
-			ElementContext elem = xml.event.context.getFirst();
-			while (xml.nextInnerElement(elem)) {
-				if (xml.event.text.equals("attribute"))
-					attrs.add(InjectionXmlConfiguration.readObjectAttribute01(getInjectionContext(), xml, app));
-				else if (xml.event.text.equals("init-method"))
-					initMethod = InjectionXmlConfiguration.readObjectMethod01(xml);
-				else
-					throw new Exception("Unexpected element " + xml.event.text.asString() + " in web-socket-router");
-			}
-		}
-		WebSocketRouter router = (WebSocketRouter)Injection.create(getInjectionContext(), cl, initMethod, attrs);
-		if (id != null) getInjectionContext().add(new Singleton(cl, router, id));
+		
+		ObjectValue value = InjectionXmlParser01.readObjectValue(ctx, xml, app);
+		WebSocketRouter router = value.create(ctx, WebSocketRouter.class, null, new Annotation[0]);
+		if (id != null) ctx.add(new Singleton(ctx, WebSocketRouter.class, router, id, null));
 		return new Pair<>(path, router);
 	}
 
 	private void callConfigurator(XMLStreamReader xml, Application app) throws Exception {
-		String className = Injection.resolveProperties(getInjectionContext(), app, xml.getAttributeValueByLocalName("class"));
-		if (className == null)
-			throw new Exception("Missing attribute class on element " + xml.event.text.asString());
-		Class<?> cl = app.getClassLoader().loadClass(className);
-		if (!WebResourcesBundleConfigurator.class.isAssignableFrom(cl))
-			throw new Exception("Invalid WebResourcesBundleConfigurator class: " + className);
-		List<ObjectAttribute> attrs = new LinkedList<>();
-		ObjectMethod initMethod = null;
-		if (!xml.event.isClosed) {
-			ElementContext elem = xml.event.context.getFirst();
-			while (xml.nextInnerElement(elem)) {
-				if (xml.event.text.equals("attribute"))
-					attrs.add(InjectionXmlConfiguration.readObjectAttribute01(getInjectionContext(), xml, app));
-				else if (xml.event.text.equals("init-method"))
-					initMethod = InjectionXmlConfiguration.readObjectMethod01(xml);
-				else
-					throw new Exception("Unexpected element " + xml.event.text.asString() + " in configurator");
-			}
-		}
-		WebResourcesBundleConfigurator configurator = (WebResourcesBundleConfigurator)Injection.create(getInjectionContext(), cl, initMethod, attrs);
+		InjectionContext ctx = getInjectionContext();
+		ObjectValue value = InjectionXmlParser01.readObjectValue(ctx, xml, app);
+		WebResourcesBundleConfigurator configurator = value.create(ctx, WebResourcesBundleConfigurator.class, null, new Annotation[0]);
 		configurator.configure(this);
 	}
 	

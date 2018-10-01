@@ -7,6 +7,8 @@ import java.util.Map;
 
 import net.lecousin.framework.concurrent.synch.ISynchronizationPoint;
 import net.lecousin.framework.concurrent.synch.SynchronizationPoint;
+import net.lecousin.framework.math.FragmentedRangeLong;
+import net.lecousin.framework.math.RangeLong;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
@@ -37,6 +39,10 @@ public class TestAuthenticationProvider implements IAuthenticationProvider {
 		return new SynchronizationPoint<>(new Exception("you are unknown here"));
 	}
 	
+	@Override
+	public void deconnect(IAuthentication auth, WebRequest request) {
+	}
+	
 	public TestAuthenticationProvider() {
 		TestAuth user;
 		user = new TestAuth("guillaume");
@@ -44,22 +50,22 @@ public class TestAuthenticationProvider implements IAuthenticationProvider {
 		user.getRoles().add("Role2");
 		user.getBooleanRights().put("b1", Boolean.TRUE);
 		user.getBooleanRights().put("b2", Boolean.TRUE);
-		user.getIntegerRights().put("i1", Integer.valueOf(51));
-		user.getIntegerRights().put("i2", Integer.valueOf(3));
+		user.getIntegerRights().put("i1", new FragmentedRangeLong(new RangeLong(51, 51)));
+		user.getIntegerRights().put("i2", new FragmentedRangeLong(new RangeLong(3, 3)));
 		users.put("guillaume", user);
 		
 		user = new TestAuth("robert");
 		user.getRoles().add("Role1");
 		user.getBooleanRights().put("b1", Boolean.TRUE);
 		user.getBooleanRights().put("b2", Boolean.FALSE);
-		user.getIntegerRights().put("i1", Integer.valueOf(10));
-		user.getIntegerRights().put("i2", Integer.valueOf(0));
+		user.getIntegerRights().put("i1", new FragmentedRangeLong(new RangeLong(10, 10)));
+		user.getIntegerRights().put("i2", new FragmentedRangeLong(new RangeLong(0, 0)));
 		users.put("robert", user);
 		
 		user = new TestAuth("dupont");
 		user.getRoles().add("Role2");
 		user.getBooleanRights().put("b2", Boolean.TRUE);
-		user.getIntegerRights().put("i2", Integer.valueOf(5));
+		user.getIntegerRights().put("i2", new FragmentedRangeLong(new RangeLong(5, 5)));
 		users.put("dupont", user);
 		
 		user = new TestAuth("durand");
@@ -79,7 +85,7 @@ public class TestAuthenticationProvider implements IAuthenticationProvider {
 		private String username;
 		private List<String> roles = new LinkedList<>();
 		private Map<String, Boolean> booleanRights = new HashMap<>();
-		private Map<String, Integer> integerRights = new HashMap<>();
+		private Map<String, FragmentedRangeLong> integerRights = new HashMap<>();
 
 		@Override
 		public String getUsername() {
@@ -102,7 +108,7 @@ public class TestAuthenticationProvider implements IAuthenticationProvider {
 		}
 		
 		@Override
-		public Map<String, Integer> getIntegerRights() {
+		public Map<String, FragmentedRangeLong> getIntegerRights() {
 			return integerRights;
 		}
 	}

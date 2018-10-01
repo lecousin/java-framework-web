@@ -31,10 +31,12 @@ import net.lecousin.framework.io.serialization.Serializer;
 import net.lecousin.framework.io.serialization.TypeDefinition;
 import net.lecousin.framework.json.JSONSerializer;
 import net.lecousin.framework.log.Logger;
+import net.lecousin.framework.math.FragmentedRangeLong;
+import net.lecousin.framework.math.RangeLong;
 import net.lecousin.framework.network.http.HTTPRequest;
-import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.exception.HTTPResponseError;
 import net.lecousin.framework.network.http.server.HTTPServerProtocol;
+import net.lecousin.framework.network.http.server.HTTPServerResponse;
 import net.lecousin.framework.network.mime.MimeHeader;
 import net.lecousin.framework.network.mime.MimeMessage;
 import net.lecousin.framework.network.mime.header.ParameterizedHeaderValue;
@@ -45,10 +47,10 @@ import net.lecousin.framework.plugins.ExtensionPoints;
 import net.lecousin.framework.util.Pair;
 import net.lecousin.framework.util.Triple;
 import net.lecousin.framework.web.WebRequest;
-import net.lecousin.framework.web.WebRequestProcessor;
 import net.lecousin.framework.web.WebResourcesBundle;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
+import net.lecousin.framework.web.security.IRightsManager;
 import net.lecousin.framework.web.services.WebService;
 import net.lecousin.framework.web.services.WebService.Body;
 import net.lecousin.framework.web.services.WebService.Query;
@@ -56,12 +58,11 @@ import net.lecousin.framework.web.services.WebServiceProvider;
 import net.lecousin.framework.web.services.WebServiceUtils;
 import net.lecousin.framework.web.services.rest.REST.Id;
 
-public class RESTWebServiceProvider implements WebServiceProvider {
+public class RESTWebServiceProvider extends WebServiceProvider<REST> {
 	
 	public RESTWebServiceProvider(WebResourcesBundle bundle, REST rest) throws Exception {
+		super(bundle, rest);
 		this.logger = LCCore.getApplication().getLoggerFactory().getLogger(RESTWebServiceProvider.class);
-		this.bundle = bundle;
-		this.rest = rest;
 		resource = rest.getClass().getAnnotation(REST.Resource.class);
 		if (resource == null)
 			throw new Exception("Class "+rest.getClass().getName()+" must have the REST.Resource annotation");
@@ -71,12 +72,12 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 		parseService(bundle);
 	}
 	
-	@Inject(required=false)
+	@Inject(required = false)
 	private IAuthenticationProvider authenticationProvider;
+	@Inject(required = false)
+	private IRightsManager rightsManager;
 
 	private Logger logger;
-	private WebResourcesBundle bundle;
-	private REST rest;
 	private REST.Resource resource;
 	private WebService.RequireRole[] globalRoles;
 	private WebService.RequireBooleanRight[] globalBooleanRights;
@@ -89,23 +90,8 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 	private List<RestMethod> subResources = new ArrayList<>();
 	
 	@Override
-	public WebResourcesBundle getParent() {
-		return bundle;
-	}
-	
-	@Override
-	public void setParent(WebRequestProcessor parent) {
-		throw new IllegalStateException("setParent cannot be called on a web service provider");
-	}
-	
-	@Override
 	public String getServiceTypeName() {
 		return "REST";
-	}
-	
-	@Override
-	public REST getWebService() {
-		return rest;
 	}
 	
 	@Override
@@ -128,7 +114,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 	}
 
 	private void parseService(WebResourcesBundle bundle) throws Exception {
-		for (Method m : rest.getClass().getMethods()) {
+		for (Method m : service.getClass().getMethods()) {
 			String used = null;
 			
 			WebService.RequireRole[] specificRoles = m.getAnnotationsByType(WebService.RequireRole.class);
@@ -177,7 +163,13 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 					rm.firstPathElement = name;
 					rm.secondPathElement = ""; // nothing expected
 				}
-				postMethods.add(rm);
+				switch (method.method()) {
+				case GET: getMethods.add(rm); break;
+				case POST: postMethods.add(rm); break;
+				case PUT: putMethods.add(rm); break;
+				case DELETE: deleteMethods.add(rm); break;
+				default: throw new Exception("Method " + method.method().name() + " is not supported for @REST.Method annotation");
+				}
 				used = "Method";
 			}
 			
@@ -187,7 +179,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 				if (used != null)
 					throw new Exception("A method cannot have both annotations ListResources and "+used);
 				if (!REST.ResourceType.MULTIPLE.equals(resource.type()))
-					throw new Exception("Method "+m.getName()+" is declared with @ListResources but class "+rest.getClass().getName()+" is declared as an individual resource");
+					throw new Exception("Method "+m.getName()+" is declared with @ListResources but class "+service.getClass().getName()+" is declared as an individual resource");
 				RestMethod rm = new RestMethod();
 				rm.method = m;
 				rm.specificRoles = specificRoles;
@@ -206,7 +198,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 				if (used != null)
 					throw new Exception("A method cannot have both annotations CreateResource and "+used);
 				if (!REST.ResourceType.MULTIPLE.equals(resource.type()))
-					throw new Exception("Method "+m.getName()+" is declared with @CreateResource but class "+rest.getClass().getName()+" is declared as an individual resource");
+					throw new Exception("Method "+m.getName()+" is declared with @CreateResource but class "+service.getClass().getName()+" is declared as an individual resource");
 				RestMethod rm = new RestMethod();
 				rm.method = m;
 				rm.specificRoles = specificRoles;
@@ -288,7 +280,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 		}
 		
 		// @Resource for sub-resources
-		for (Class<?> innerClass : rest.getClass().getClasses()) {
+		for (Class<?> innerClass : service.getClass().getClasses()) {
 			REST.Resource res = innerClass.getAnnotation(REST.Resource.class);
 			if (res == null) continue;
 			if (innerClass.isInterface())
@@ -299,8 +291,8 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 				throw new Exception("Resource inner class "+innerClass.getName()+" must implement the REST interface");
 			Object instance;
 			if ((innerClass.getModifiers() & Modifier.STATIC) == 0) {
-				Constructor<?> ctor = innerClass.getDeclaredConstructor(rest.getClass());
-				instance = ctor.newInstance(rest);
+				Constructor<?> ctor = innerClass.getDeclaredConstructor(service.getClass());
+				instance = ctor.newInstance(service);
 			} else
 				instance = innerClass.newInstance();
 			Injection.inject(bundle.getInjectionContext(), instance);
@@ -318,7 +310,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 		
 		if (logger.debug()) {
 			StringBuilder s = new StringBuilder();
-			s.append("REST Service loaded: ").append(rest.getClass().getName()).append("\r\n");
+			s.append("REST Service loaded: ").append(service.getClass().getName()).append("\r\n");
 			for (RestMethod rm : getMethods)
 				s.append(" - GET: ").append(rm.firstPathElement).append('/').append(rm.secondPathElement).append('=').append(rm.method.getName()).append("\r\n");
 			for (RestMethod rm : postMethods)
@@ -546,7 +538,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 	
 	@SuppressWarnings("resource")
 	@Override
-	public ISynchronizationPoint<?> process(Object fromCheck, WebRequest request) {
+	protected ISynchronizationPoint<?> processServiceRequest(Object fromCheck, WebRequest request) {
 		if (fromCheck instanceof RESTSpecificationPlugin) {
 			MemoryIO io = new MemoryIO(8192, "REST specification");
 			OutputToInput o2i = new OutputToInput(io, "REST specification");
@@ -600,6 +592,10 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 			internalError("No authentication provider, but authentication needed by this service", request);
 			return new SynchronizationPoint<>(true);
 		}
+		if (rightsManager == null) {
+			internalError("No rights manager, but authentication needed by this service", request);
+			return new SynchronizationPoint<>(true);
+		}
 		AsyncWork<IAuthentication, Exception> auth = request.authenticate(authenticationProvider);
 		SynchronizationPoint<Exception> sp = new SynchronizationPoint<>();
 		auth.listenAsync(new Task.Cpu<Void, NoException>("Processing REST request", Task.PRIORITY_NORMAL) {
@@ -624,32 +620,32 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 	private ISynchronizationPoint<?> call(RestMethod rm, String resourceId, WebRequest request, WebResourcesBundle bundle, IAuthentication auth) {
 		try {
 			for (WebService.RequireRole role : globalRoles)
-				if (auth == null || !auth.hasRole(role.value())) {
+				if (auth == null || !rightsManager.hasRole(auth, role.value())) {
 					forbidden(request);
 					return new SynchronizationPoint<>(true);
 				}
 			for (WebService.RequireRole role : rm.specificRoles)
-				if (auth == null || !auth.hasRole(role.value())) {
+				if (auth == null || !rightsManager.hasRole(auth, role.value())) {
 					forbidden(request);
 					return new SynchronizationPoint<>(true);
 				}
 			for (WebService.RequireBooleanRight right : globalBooleanRights)
-				if (auth == null || !auth.hasRight(right.name(), right.value())) {
+				if (auth == null || !rightsManager.hasRight(auth, right.name(), right.value())) {
 					forbidden(request);
 					return new SynchronizationPoint<>(true);
 				}
 			for (WebService.RequireBooleanRight right : rm.specificBooleanRights)
-				if (auth == null || !auth.hasRight(right.name(), right.value())) {
+				if (auth == null || !rightsManager.hasRight(auth, right.name(), right.value())) {
 					forbidden(request);
 					return new SynchronizationPoint<>(true);
 				}
 			for (WebService.RequireIntegerRight right : globalIntegerRights)
-				if (auth == null || !auth.hasRight(right.name(), right.value())) {
+				if (auth == null || !rightsManager.hasRight(auth, right.name(), new FragmentedRangeLong(new RangeLong(right.value(), right.value())))) {
 					forbidden(request);
 					return new SynchronizationPoint<>(true);
 				}
 			for (WebService.RequireIntegerRight right : rm.specificIntegerRights)
-				if (auth == null || !auth.hasRight(right.name(), right.value())) {
+				if (auth == null || !rightsManager.hasRight(auth, right.name(), new FragmentedRangeLong(new RangeLong(right.value(), right.value())))) {
 					forbidden(request);
 					return new SynchronizationPoint<>(true);
 				}
@@ -664,7 +660,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 					params[i] = request;
 				else if (type.isAssignableFrom(HTTPRequest.class))
 					params[i] = request.getRequest();
-				else if (type.isAssignableFrom(HTTPResponse.class))
+				else if (type.isAssignableFrom(HTTPServerResponse.class))
 					params[i] = request.getResponse();
 				else if (type.isAssignableFrom(Session.class))
 					params[i] = request.getSession(true);
@@ -746,7 +742,7 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 				if (sp.isCancelled()) return;
 				try {
 					Object result;
-					try { result = rm.method.invoke(rest, params); }
+					try { result = rm.method.invoke(service, params); }
 					catch (InvocationTargetException e) {
 						Throwable err = e.getTargetException();
 						logger.error("Error calling REST method " + rm.method.getName() + " on class " + rm.method.getDeclaringClass().getName(), err);
@@ -908,8 +904,6 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 		
 		if (sp.isCancelled()) return;
 		
-		request.getResponse().setStatus(200);
-		request.getResponse().setRawContentType(responseType);
 		OutputToInputBuffers data = new OutputToInputBuffers(true, 10, Task.PRIORITY_NORMAL);
 		ISynchronizationPoint<Exception> serialization = ser.serialize(result, expectedType, data, bundle.getSerializationRules());
 		serialization.listenInline(new Runnable() {
@@ -921,9 +915,12 @@ public class RESTWebServiceProvider implements WebServiceProvider {
 				data.endOfData();
 			}
 		});
-		sp.forwardCancel(serialization);
+		request.getResponse().setStatus(200);
+		request.getResponse().setRawContentType(responseType);
 		request.getResponse().getMIME().setBodyToSend(data);
-		sp.unblock();
+		sp.forwardCancel(serialization);
+		// wait for some data to be ready before to send the response
+		data.canStartReading().listenInlineSP(sp);
 	}
 	
 	@SuppressWarnings("resource")

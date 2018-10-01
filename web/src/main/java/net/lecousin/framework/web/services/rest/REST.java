@@ -5,6 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.web.services.WebService;
 
 public interface REST extends WebService {
@@ -35,15 +36,18 @@ public interface REST extends WebService {
 	}
 
 	/**
-	 * Method on a resource. If the name is empty, the name of the method is used.
-	 * A method is accessed using a POST request, and the method name as sub-path.
+	 * Method on a resource. If the name is empty, the name of the method is used.<br/>
+	 * A method is accessed using a request, and the method name as sub-path.<br/>
 	 * In case of a multiple resource, if the method has an Id parameter,
-	 * a resource identifier must be present before the method name in the path. 
+	 * a resource identifier must be present before the method name in the path.<br/>
+	 * By default, a POST is used but another method may be specified.
+	 * In case of a GET, a Body is not allowed.
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
 	public @interface Method {
 		String name() default "";
+		HTTPRequest.Method method() default HTTPRequest.Method.POST;
 	}
 	
 	/**

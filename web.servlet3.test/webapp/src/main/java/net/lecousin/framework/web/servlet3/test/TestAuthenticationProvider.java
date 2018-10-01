@@ -7,6 +7,7 @@ import java.util.Map;
 
 import net.lecousin.framework.concurrent.synch.ISynchronizationPoint;
 import net.lecousin.framework.concurrent.synch.SynchronizationPoint;
+import net.lecousin.framework.math.FragmentedRangeLong;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
@@ -36,6 +37,10 @@ public class TestAuthenticationProvider implements IAuthenticationProvider {
 			return new SynchronizationPoint<>(true);
 		}
 		return new SynchronizationPoint<>(new Exception("you are unknown here"));
+	}
+	
+	@Override
+	public void deconnect(IAuthentication auth, WebRequest request) {
 	}
 	
 	private static class TestAuth implements IAuthentication {
@@ -68,13 +73,8 @@ public class TestAuthenticationProvider implements IAuthenticationProvider {
 		}
 		
 		@Override
-		public Map<String, Integer> getIntegerRights() {
+		public Map<String, FragmentedRangeLong> getIntegerRights() {
 			return new HashMap<>();
-		}
-		
-		@Override
-		public Object getDescriptor() {
-			return this;
 		}
 	}
 	

@@ -14,17 +14,18 @@
 			<xsd:extension base="PathHandler">
 				<xsd:sequence>
 					<xsd:element ref="injection:Injection" minOccurs="0" maxOccurs="1"/>
-					<xsd:element name="custom-filter" type="CustomFilter" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element name="custom-filter" type="Filter" minOccurs="0" maxOccurs="unbounded"/>
 					<xsd:element name="pre-filter" type="Filter" minOccurs="0" maxOccurs="unbounded"/>
 					<xsd:choice minOccurs="0" maxOccurs="unbounded">
 						<xsd:element name="processor" type="Processor" minOccurs="0" maxOccurs="unbounded"/>
 						<xsd:element name="static" type="StaticProcessor" minOccurs="0" maxOccurs="unbounded"/>
 						<xsd:element name="service" type="Service" minOccurs="0" maxOccurs="unbounded"/>
+						<xsd:element name="services" type="Services" minOccurs="0" maxOccurs="unbounded"/>
 						<xsd:element name="bundle" type="Bundle" minOccurs="0" maxOccurs="unbounded"/>
 					</xsd:choice>
 					<xsd:element name="post-filter" type="Filter" minOccurs="0" maxOccurs="unbounded"/>
 					<xsd:element name="web-socket-router" type="WebSocketRouter" minOccurs="0" maxOccurs="unbounded"/>
-					<xsd:element name="configurator" type="Configurator" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element name="configurator" type="injection:ObjectValue" minOccurs="0" maxOccurs="unbounded"/>
 				</xsd:sequence>
 				<xsd:attribute name="config" type="xsd:string"/>
 			</xsd:extension>
@@ -36,31 +37,17 @@
 	</xsd:complexType>
 	
 	<xsd:complexType name="Filter">
-		<xsd:sequence>
-			<xsd:element name="attribute" type="injection:ObjectAttribute" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="init-method" type="injection:Method" minOccurs="0" maxOccurs="1"/>
-		</xsd:sequence>
-		<xsd:attribute name="class" type="xsd:string"/>
-		<xsd:attribute name="id" type="xsd:string" use="optional"/>
-	</xsd:complexType>
-	
-	<xsd:complexType name="CustomFilter">
-		<xsd:sequence>
-			<xsd:element name="attribute" type="injection:ObjectAttribute" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="init-method" type="injection:Method" minOccurs="0" maxOccurs="1"/>
-		</xsd:sequence>
-		<xsd:attribute name="class" type="xsd:string"/>
-		<xsd:attribute name="id" type="xsd:string" use="optional"/>
+		<xsd:complexContent>
+			<xsd:extension base="injection:ObjectValue">
+				<xsd:attribute name="id" type="xsd:string" use="optional"/>
+			</xsd:extension>
+		</xsd:complexContent>
 	</xsd:complexType>
 	
 	<xsd:complexType name="Processor">
 		<xsd:complexContent>
-			<xsd:extension base="PathHandler">
-				<xsd:sequence>
-					<xsd:element name="attribute" type="injection:ObjectAttribute" minOccurs="0" maxOccurs="unbounded"/>
-					<xsd:element name="init-method" type="injection:Method" minOccurs="0" maxOccurs="1"/>
-				</xsd:sequence>
-				<xsd:attribute name="class" type="xsd:string"/>
+			<xsd:extension base="injection:ObjectValue">
+				<xsd:attribute name="path" type="xsd:string"/>
 				<xsd:attribute name="id" type="xsd:string" use="optional"/>
 				<xsd:attribute name="config" type="xsd:string" use="optional"/>
 			</xsd:extension>
@@ -86,22 +73,17 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 	
-	<xsd:complexType name="WebSocketRouter">
-		<xsd:sequence>
-			<xsd:element name="attribute" type="injection:ObjectAttribute" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="init-method" type="injection:Method" minOccurs="0" maxOccurs="1"/>
-		</xsd:sequence>
-		<xsd:attribute name="path" type="xsd:string" use="optional"/>
-		<xsd:attribute name="class" type="xsd:string"/>
-		<xsd:attribute name="id" type="xsd:string" use="optional"/>
+	<xsd:complexType name="Services">
+		<xsd:attribute name="package" type="xsd:string"/>
 	</xsd:complexType>
 	
-	<xsd:complexType name="Configurator">
-		<xsd:sequence>
-			<xsd:element name="attribute" type="injection:ObjectAttribute" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="init-method" type="injection:Method" minOccurs="0" maxOccurs="1"/>
-		</xsd:sequence>
-		<xsd:attribute name="class" type="xsd:string"/>
+	<xsd:complexType name="WebSocketRouter">
+		<xsd:complexContent>
+			<xsd:extension base="injection:ObjectValue">
+				<xsd:attribute name="path" type="xsd:string"/>
+				<xsd:attribute name="id" type="xsd:string" use="optional"/>
+			</xsd:extension>
+		</xsd:complexContent>
 	</xsd:complexType>
 	
 </xsd:schema>

@@ -8,6 +8,7 @@ import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestFilter;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
+import net.lecousin.framework.web.security.IRightsManager;
 
 /**
  * Reject any request without authenticated user, or with a user who does not have the specified right.
@@ -27,6 +28,8 @@ public class RequireBooleanRight implements WebRequestFilter {
 	
 	@Inject
 	private IAuthenticationProvider authenticationProvider;
+	@Inject
+	private IRightsManager rightsManager;
 	
 	private String rightName;
 	private boolean rightValue;
@@ -46,11 +49,11 @@ public class RequireBooleanRight implements WebRequestFilter {
 				IAuthentication a = auth.getResult();
 				if (a == null) {
 					// not authenticated
-					request.getResponse().setStatus(403, "You must be authenticated for this request");
+					request.getResponse().setStatus(401, "You must be authenticated for this request");
 					result.unblockSuccess(FilterResult.STOP_PROCESSING);
 					return null;
 				}
-				if (!a.hasRight(rightName, rightValue)) {
+				if (!rightsManager.hasRight(a, rightName, rightValue)) {
 					request.getResponse().setStatus(403, "Request not allowed, it needs right " + rightName);
 					result.unblockSuccess(FilterResult.STOP_PROCESSING);
 					return null;

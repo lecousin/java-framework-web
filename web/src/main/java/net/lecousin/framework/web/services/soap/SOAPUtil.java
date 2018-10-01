@@ -54,7 +54,7 @@ public final class SOAPUtil {
 	public static void sendMessage(SOAPMessageContent message, OutputToInput output, List<SerializationRule> rules) {
 		@SuppressWarnings("resource")
 		SimpleBufferedWritable bout = new SimpleBufferedWritable(output, 4096);
-		XMLWriter writer = new XMLWriter(bout, StandardCharsets.UTF_8, true);
+		XMLWriter writer = new XMLWriter(bout, StandardCharsets.UTF_8, true, false);
 		Map<String, String> namespaces = new HashMap<>();
 		if (message.bodyNamespaceURI != null)
 			namespaces.put(message.bodyNamespaceURI, "message");

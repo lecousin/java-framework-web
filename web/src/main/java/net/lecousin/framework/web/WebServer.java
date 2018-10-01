@@ -14,18 +14,20 @@ import net.lecousin.framework.application.Application;
 import net.lecousin.framework.application.LCCore;
 import net.lecousin.framework.collections.ArrayUtil;
 import net.lecousin.framework.concurrent.Task;
+import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.concurrent.synch.ISynchronizationPoint;
 import net.lecousin.framework.concurrent.synch.SynchronizationPoint;
+import net.lecousin.framework.exception.NoException;
 import net.lecousin.framework.injection.InjectionContext;
 import net.lecousin.framework.log.Logger;
 import net.lecousin.framework.network.NetUtil;
 import net.lecousin.framework.network.http.HTTPRequest;
-import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.server.HTTPRequestProcessor;
 import net.lecousin.framework.network.http.server.HTTPServerProtocol;
+import net.lecousin.framework.network.http.server.HTTPServerResponse;
 import net.lecousin.framework.network.http.websocket.WebSocketDispatcher;
-import net.lecousin.framework.network.http.websocket.WebSocketServerProtocol;
 import net.lecousin.framework.network.http.websocket.WebSocketDispatcher.WebSocketHandler;
+import net.lecousin.framework.network.http.websocket.WebSocketServerProtocol;
 import net.lecousin.framework.network.server.TCPServer;
 import net.lecousin.framework.network.server.TCPServerClient;
 import net.lecousin.framework.network.server.protocol.SSLServerProtocol;
@@ -39,16 +41,16 @@ import net.lecousin.framework.network.ssl.SSLContextConfig;
 public class WebServer implements Closeable {
 
 	public WebServer() {
-		this(null, null, 0, true);
+		this(null, null, true);
 	}
 	
 	public WebServer(
 		SSLContext sslContext,
-		SessionStorage sessionStorage, long sessionExpiration, boolean sessionOnlyOnSecureChannel
+		SessionStorage sessionStorage, boolean sessionOnlyOnSecureChannel
 	) {
 		this.ssl = sslContext;
 		if (sessionStorage != null)
-			sessionProvider = new NetworkSessionProvider(sessionStorage, sessionExpiration, "WebServer");
+			sessionProvider = new NetworkSessionProvider(sessionStorage, "WebServer");
 		this.sessionOnlyOnSecureChannel = sessionOnlyOnSecureChannel;
 		app = LCCore.getApplication();
 		logger = app.getLoggerFactory().getLogger(WebServer.class);
@@ -116,8 +118,7 @@ public class WebServer implements Closeable {
 			List<InetAddress> ips;
 			if (listen.ipAddresses != null && !listen.ipAddresses.isEmpty()) {
 				ips = new ArrayList<>();
-				for (String ip : listen.ipAddresses) {
-					byte[] ipa = NetUtil.IPFromString(ip);
+				for (byte[] ipa : listen.ipAddresses) {
 					for (InetAddress addr : addresses) {
 						if (!ArrayUtil.equals(ipa, addr.getAddress())) continue;
 						ips.add(addr);
@@ -194,26 +195,45 @@ public class WebServer implements Closeable {
 	private final WebSessionProvider webSessionProvider = new WebSessionProvider() {
 		
 		@Override
-		public ISession getSession(WebRequest request, boolean openIfNeeded) {
+		public AsyncWork<ISession, NoException> getSession(WebRequest request, boolean openIfNeeded) {
 			if (sessionOnlyOnSecureChannel && !request.isSecure())
-				return null;
+				return new AsyncWork<>(null, null);
 			if (sessionProvider == null)
-				return null;
+				return new AsyncWork<>(null, null);
 			String id = request.getRequest().getCookie("lc-session");
 			if (id != null) {
 				id = id.trim();
 				if (id.length() > 0) {
-					Session session = sessionProvider.get(id, request.getClient());
-					if (session != null)
-						return session;
+					AsyncWork<Session, NoException> getSession = sessionProvider.get(id, request.getClient());
+					if (!getSession.isUnblocked()) {
+						AsyncWork<ISession, NoException> result = new AsyncWork<>();
+						getSession.listenAsync(new Task.Cpu.FromRunnable("Retrieve web session",  Task.PRIORITY_NORMAL, () -> {
+							Session session = getSession.getResult();
+							if (session != null) {
+								request.getResponse().addCookie("lc-session", session.getId(), sessionProvider.getStorage().getExpiration(), "/", null, sessionOnlyOnSecureChannel, true);
+								result.unblockSuccess(session);
+							} else if (openIfNeeded) {
+								session = sessionProvider.create(request.getClient());
+								request.getResponse().addCookie("lc-session", session.getId(), sessionProvider.getStorage().getExpiration(), "/", null, sessionOnlyOnSecureChannel, true);
+								result.unblockSuccess(session);
+							} else
+								result.unblockSuccess(null);
+						}), true);
+						return result;
+					}
+					Session session = getSession.getResult();
+					if (session != null) {
+						request.getResponse().addCookie("lc-session", session.getId(), sessionProvider.getStorage().getExpiration(), "/", null, sessionOnlyOnSecureChannel, true);
+						return new AsyncWork<>(session, null);
+					}
 				}
 			}
 			if (openIfNeeded) {
 				Session session = sessionProvider.create(request.getClient());
-				request.getResponse().addCookie("lc-session", session.getId(), sessionProvider.getExpiration(), "/", null, sessionOnlyOnSecureChannel, true);
-				return session;
+				request.getResponse().addCookie("lc-session", session.getId(), sessionProvider.getStorage().getExpiration(), "/", null, sessionOnlyOnSecureChannel, true);
+				return new AsyncWork<>(session, null);
 			}
-			return null;
+			return new AsyncWork<>(null, null);
 		}
 		
 		@Override
@@ -227,7 +247,7 @@ public class WebServer implements Closeable {
 				return;
 			if (session == null)
 				return;
-			sessionProvider.destroy(((Session)session).getId());
+			sessionProvider.destroy((Session)session);
 			request.getResponse().addCookie("lc-session", "", -365L * 24 * 60 * 60 * 1000, "/", null, sessionOnlyOnSecureChannel, true);
 		}
 	};
@@ -236,7 +256,7 @@ public class WebServer implements Closeable {
 		
 		@SuppressWarnings("resource")
 		@Override
-		public ISynchronizationPoint<?> process(TCPServerClient client, HTTPRequest request, HTTPResponse response) {
+		public ISynchronizationPoint<?> process(TCPServerClient client, HTTPRequest request, HTTPServerResponse response) {
 			TCPServer server = client.getServer();
 			WebRequest req = new WebRequest(client, request, response, server.getProtocol() instanceof SSLServerProtocol, webSessionProvider);
 			ISynchronizationPoint<?> res = root.process(Boolean.TRUE, req);

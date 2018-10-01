@@ -10,6 +10,7 @@ import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestFilter;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
+import net.lecousin.framework.web.security.IRightsManager;
 
 /**
  * Reject any request without authenticated user, or with a user who does not have the specified roles.
@@ -28,6 +29,8 @@ public class RequireRolesFilter implements WebRequestFilter {
 	
 	@Inject
 	private IAuthenticationProvider authenticationProvider;
+	@Inject
+	private IRightsManager rightsManager;
 	
 	private List<String> roles;
 	
@@ -46,12 +49,12 @@ public class RequireRolesFilter implements WebRequestFilter {
 				IAuthentication a = auth.getResult();
 				if (a == null) {
 					// not authenticated
-					request.getResponse().setStatus(403, "You must be authenticated for this request");
+					request.getResponse().setStatus(401, "You must be authenticated for this request");
 					result.unblockSuccess(FilterResult.STOP_PROCESSING);
 					return null;
 				}
 				for (String r : roles)
-					if (!a.hasRole(r)) {
+					if (!rightsManager.hasRole(a, r)) {
 						request.getResponse().setStatus(403, "Request not allowed, it needs role " + r);
 						result.unblockSuccess(FilterResult.STOP_PROCESSING);
 						return null;

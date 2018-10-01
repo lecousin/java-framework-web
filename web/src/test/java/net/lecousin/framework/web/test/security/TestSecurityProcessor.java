@@ -10,11 +10,14 @@ import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestProcessor;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
+import net.lecousin.framework.web.security.IRightsManager;
 
 public class TestSecurityProcessor implements WebRequestProcessor {
 
 	@Inject
 	public IAuthenticationProvider authenticationProvider;
+	@Inject
+	public IRightsManager rightsManager;
 	private WebRequestProcessor parent;
 	
 	@Override
@@ -37,10 +40,9 @@ public class TestSecurityProcessor implements WebRequestProcessor {
 	public ISynchronizationPoint<? extends Exception> process(Object fromCheck, WebRequest request) {
 		try {
 			IAuthentication auth = request.authenticate(authenticationProvider).blockResult(0);
-			Assert.assertTrue(auth.hasRight("i1", 51));
-			Assert.assertEquals(auth.isSuperAdmin(), auth.hasRight("i1", 12));
-			Assert.assertEquals(auth.isSuperAdmin(), auth.hasRight("toto", 12));
-			auth.getDescriptor();
+			Assert.assertTrue(rightsManager.hasRight(auth, "i1", 51));
+			Assert.assertEquals(auth.isSuperAdmin(), rightsManager.hasRight(auth, "i1", 12));
+			Assert.assertEquals(auth.isSuperAdmin(), rightsManager.hasRight(auth, "toto", 12));
 		} catch (Throwable t) {
 			return new SynchronizationPoint<Exception>(new Exception("security test error", t));
 		}

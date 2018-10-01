@@ -61,7 +61,7 @@ public interface WebService {
 		/** Right name. */
 		String name();
 		/** Right value. */
-		int value();
+		long value();
 	}
 
 	/** Specify that a service or method of a service needs rights to be executed. */

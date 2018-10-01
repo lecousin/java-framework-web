@@ -9,9 +9,10 @@ import java.util.Map;
 
 import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.concurrent.synch.ISynchronizationPoint;
+import net.lecousin.framework.exception.NoException;
 import net.lecousin.framework.network.TCPRemote;
 import net.lecousin.framework.network.http.HTTPRequest;
-import net.lecousin.framework.network.http.HTTPResponse;
+import net.lecousin.framework.network.http.server.HTTPServerResponse;
 import net.lecousin.framework.network.session.ISession;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
@@ -22,7 +23,7 @@ public class WebRequest {
 	public WebRequest(
 		TCPRemote client,
 		HTTPRequest request,
-		HTTPResponse response,
+		HTTPServerResponse response,
 		boolean onSecureChannel,
 		WebSessionProvider sessionProvider
 	) {
@@ -39,7 +40,7 @@ public class WebRequest {
 	
 	private TCPRemote client;
 	private HTTPRequest request;
-	private HTTPResponse response;
+	private HTTPServerResponse response;
 	private boolean onSecureChannel;
 	private WebSessionProvider sessionProvider;
 	
@@ -47,7 +48,7 @@ public class WebRequest {
 	private String currentPath;
 	private String subPath;
 	
-	private ISession session;
+	private AsyncWork<ISession, NoException> session;
 	private boolean sessionRequested = false;
 	
 	private Map<IAuthenticationProvider, IAuthentication> auth = null;
@@ -61,7 +62,7 @@ public class WebRequest {
 		return request;
 	}
 	
-	public HTTPResponse getResponse() {
+	public HTTPServerResponse getResponse() {
 		return response;
 	}
 	
@@ -95,27 +96,57 @@ public class WebRequest {
 	}
 	
 	/** Return the session. */
-	public ISession getSession(boolean openIfNeeded) {
-		if (session == null && (!sessionRequested || openIfNeeded)) {
-			sessionRequested = true;
-			session = sessionProvider.getSession(this, openIfNeeded);
-		}
+	public AsyncWork<ISession, NoException> getSession(boolean openIfNeeded) {
+		// first request
+		if (session == null)
+			return session = sessionProvider.getSession(this, openIfNeeded);
+		// if not mandatory, just return the previous request
+		if (!openIfNeeded)
+			return session;
+		// if previously requested as mandatory, just return the previous request
+		if (sessionRequested)
+			return session;
+		// if mandatory, we may need to request again
+		sessionRequested = true;
+		AsyncWork<ISession, NoException> prevRequest = session;
+		session = new AsyncWork<>();
+		prevRequest.listenInline((s) -> {
+			if (s != null) session.unblockSuccess(s);
+			else sessionProvider.getSession(this, true).listenInline(session);
+		});
 		return session;
 	}
 	
-	public void saveSession() {
+	void saveSession() {
 		if (session == null) return;
-		sessionProvider.saveSession(this, session);
+		session.listenInline((s) -> {
+			if (s != null)
+				sessionProvider.saveSession(this, s);
+		});
 	}
 	
 	public void removeSession() {
 		if (session == null && !sessionRequested)
 			getSession(true);
-		if (session == null)
+		try {
+			if (session == null || session.blockResult(0) == null)
+				return;
+		} catch (Exception e) {
 			return;
-		sessionProvider.removeSession(this, session);
+		}
+		sessionProvider.removeSession(this, session.getResult());
 		session = null;
 		sessionRequested = false;
+	}
+	
+	public boolean hasAuthentication(IAuthenticationProvider provider) {
+		return auth != null && auth.containsKey(provider);
+	}
+	
+	public IAuthentication getAuthentication(IAuthenticationProvider provider) {
+		if (auth == null || !auth.containsKey(provider))
+			return null;
+		return auth.get(provider);
 	}
 	
 	public AsyncWork<IAuthentication, Exception> authenticate(IAuthenticationProvider provider) {
@@ -138,6 +169,13 @@ public class WebRequest {
 	public void addAuthentication(IAuthenticationProvider provider, IAuthentication authentication) {
 		if (auth == null) auth = new HashMap<>(5);
 		auth.put(provider, authentication);
+	}
+	
+	public void clearAuthentication(IAuthenticationProvider provider) {
+		if (auth != null)
+			provider.deconnect(auth.remove(provider), this);
+		else
+			provider.deconnect(null, this);
 	}
 	
 	public void addAuthenticationRequest(IAuthenticationRequest auth) {

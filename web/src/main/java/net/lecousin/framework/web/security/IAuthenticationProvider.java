@@ -18,4 +18,7 @@ public interface IAuthenticationProvider {
 	/** Authenticate the user, and store the IAuthentication into the request. */
 	public ISynchronizationPoint<Exception> authenticate(WebRequest request);
 	
+	/** Deconnect the given user and clear any data in the request. auth may be null. */
+	public void deconnect(IAuthentication auth, WebRequest request);
+	
 }

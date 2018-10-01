@@ -35,11 +35,11 @@ final class WSDLGenerator {
 		StringBuilder binding = new StringBuilder(1024);
 		MemoryIO xsdIO = new MemoryIO(2048, "SOAP XSD");
 
-		String tns = XMLWriter.escape(provider.service.targetNamespace());
+		String tns = XMLWriter.escape(provider.serviceDeclaration.targetNamespace());
 		Map<String, String> additionalNamespaces = new HashMap<>();
 		
-		portType.append("<wsdl:portType name=\"").append(provider.soap.getClass().getSimpleName()).append("PortType\">\r\n");
-		binding.append("<wsdl:binding type=\"tns:").append(provider.soap.getClass().getSimpleName()).append("PortType\" name=\"").append(provider.soap.getClass().getSimpleName()).append("Binding\">\r\n");
+		portType.append("<wsdl:portType name=\"").append(provider.getWebService().getClass().getSimpleName()).append("PortType\">\r\n");
+		binding.append("<wsdl:binding type=\"tns:").append(provider.getWebService().getClass().getSimpleName()).append("PortType\" name=\"").append(provider.getWebService().getClass().getSimpleName()).append("Binding\">\r\n");
 		binding.append("\t<soap:binding style=\"document\" transport=\"http://schemas.xmlsoap.org/soap/http\"/>\r\n");
 		
 		for (Operation o : provider.operations.values())
@@ -74,9 +74,9 @@ final class WSDLGenerator {
 		wsdl.append(message).append("\r\n");
 		wsdl.append(portType).append("\r\n");
 		wsdl.append(binding).append("\r\n");
-		wsdl.append("<wsdl:service name=\"").append(provider.soap.getClass().getSimpleName()).append("\">");
-		wsdl.append("\t<wsdl:port name=\"").append(provider.soap.getClass().getSimpleName()).append("Port")
-			.append("\" binding=\"").append(provider.soap.getClass().getSimpleName()).append("Binding\">\r\n");
+		wsdl.append("<wsdl:service name=\"").append(provider.getWebService().getClass().getSimpleName()).append("\">");
+		wsdl.append("\t<wsdl:port name=\"").append(provider.getWebService().getClass().getSimpleName()).append("Port")
+			.append("\" binding=\"").append(provider.getWebService().getClass().getSimpleName()).append("Binding\">\r\n");
 		wsdl.append("\t\t<soap:address location=\"");
 		wsdl.append(request.getRootURL());
 		wsdl.append(request.getCurrentPath());
@@ -130,7 +130,7 @@ final class WSDLGenerator {
 		Map<String, String> namespaces = new HashMap<>(5);
 		namespaces.put(tns + "Request", "request");
 		XMLSpecWriter xsd = new XMLSpecWriter(tns + "Request", inputTypeName, namespaces, StandardCharsets.UTF_8, false);
-		xsd.writeSpecification(inputAny ? null : inputType, xsdIO, provider.bundle.getSerializationRules()).block(0);
+		xsd.writeSpecification(inputAny ? null : inputType, xsdIO, provider.getParent().getSerializationRules()).block(0);
 		
 		for (Pair<SOAP.Header, Class<?>> header : inputHeaders) {
 			namespaces = new HashMap<>(5);
@@ -141,7 +141,7 @@ final class WSDLGenerator {
 					additionalNamespaces.put(namespaceURI, "ns" + (additionalNamespaces.size() + 1));
 			}
 			xsd = new XMLSpecWriter(namespaceURI, header.getValue1().localName(), namespaces, StandardCharsets.UTF_8, false);
-			xsd.writeSpecification(header.getValue2(), xsdIO, provider.bundle.getSerializationRules()).block(0);
+			xsd.writeSpecification(header.getValue2(), xsdIO, provider.getParent().getSerializationRules()).block(0);
 		}
 		
 		Class<?> outputType = op.method.getReturnType();
@@ -169,7 +169,7 @@ final class WSDLGenerator {
 		namespaces = new HashMap<>(5);
 		namespaces.put(tns + "Response", "response");
 		xsd = new XMLSpecWriter(tns + "Response", outputTypeName, namespaces, StandardCharsets.UTF_8, false);
-		xsd.writeSpecification(outputAny ? null : outputType, xsdIO, provider.bundle.getSerializationRules()).block(0);
+		xsd.writeSpecification(outputAny ? null : outputType, xsdIO, provider.getParent().getSerializationRules()).block(0);
 
 		for (Pair<SOAP.Header, Class<?>> header : outputHeaders) {
 			namespaces = new HashMap<>(5);
@@ -180,7 +180,7 @@ final class WSDLGenerator {
 					additionalNamespaces.put(namespaceURI, "ns" + (additionalNamespaces.size() + 1));
 			}
 			xsd = new XMLSpecWriter(namespaceURI, header.getValue1().localName(), namespaces, StandardCharsets.UTF_8, false);
-			xsd.writeSpecification(header.getValue2(), xsdIO, provider.bundle.getSerializationRules()).block(0);
+			xsd.writeSpecification(header.getValue2(), xsdIO, provider.getParent().getSerializationRules()).block(0);
 		}
 		
 		message.append("<wsdl:message name=\"").append(op.action).append("Request\">\r\n");

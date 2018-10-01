@@ -84,7 +84,7 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 				sp.unblock();
 				return null;
 			}
-			LinkedList<Pair<String, WebServiceProvider>> services = new LinkedList<>();
+			LinkedList<Pair<String, WebServiceProvider<?>>> services = new LinkedList<>();
 			searchServices((WebResourcesBundle)p, "", services);
 			if (services.isEmpty()) {
 				request.getResponse().setStatus(200);
@@ -100,11 +100,11 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			read.listenInline(() -> { io.closeAsync(); });
 			
 			// list by service type
-			Map<String, List<Pair<String, WebServiceProvider>>> byType = new HashMap<>();
-			for (Pair<String, WebServiceProvider> proc : services) {
-				WebServiceProvider provider = proc.getValue2();
+			Map<String, List<Pair<String, WebServiceProvider<?>>>> byType = new HashMap<>();
+			for (Pair<String, WebServiceProvider<?>> proc : services) {
+				WebServiceProvider<?> provider = proc.getValue2();
 				String s = provider.getServiceTypeName();
-				List<Pair<String, WebServiceProvider>> list = byType.get(s);
+				List<Pair<String, WebServiceProvider<?>>> list = byType.get(s);
 				if (list == null) {
 					list = new LinkedList<>();
 					byType.put(s, list);
@@ -113,14 +113,14 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			}
 
 			DocContext ctx = new DocContext();
-			for (Map.Entry<String, List<Pair<String, WebServiceProvider>>> type : byType.entrySet()) {
+			for (Map.Entry<String, List<Pair<String, WebServiceProvider<?>>>> type : byType.entrySet()) {
 				DocContext typeCtx = ctx.addListElement("web-service-types");
 				typeCtx.setVariable("web-service-type", type.getKey());
-				for (Pair<String, WebServiceProvider> proc : type.getValue()) {
+				for (Pair<String, WebServiceProvider<?>> proc : type.getValue()) {
 					DocContext procCtx = typeCtx.addListElement("services");
 					procCtx.setVariable("service-path", proc.getValue1());
-					WebServiceProvider provider = proc.getValue2();
-					Object service = provider.getWebService();
+					WebServiceProvider<?> provider = proc.getValue2();
+					WebService service = provider.getWebService();
 					WebService.Description descr = service.getClass().getAnnotation(WebService.Description.class);
 					procCtx.setVariable("service-description", descr != null ? descr.value() : "No description");
 					for (WebServiceSpecification spec : provider.getSpecifications()) {
@@ -155,10 +155,10 @@ public class WebServicesDocumentation implements WebRequestProcessor {
 			return null;
 		}
 		
-		private void searchServices(WebResourcesBundle bundle, String path, LinkedList<Pair<String, WebServiceProvider>> services) {
+		private void searchServices(WebResourcesBundle bundle, String path, LinkedList<Pair<String, WebServiceProvider<?>>> services) {
 			for (Pair<String, WebRequestProcessor> p : bundle.getProcessors()) {
 				if (p.getValue2() instanceof WebServiceProvider) {
-					services.add(new Pair<>(path + p.getValue1(), (WebServiceProvider)p.getValue2()));
+					services.add(new Pair<>(path + p.getValue1(), (WebServiceProvider<?>)p.getValue2()));
 				} else if (p.getValue2() instanceof WebResourcesBundle) {
 					searchServices((WebResourcesBundle)p.getValue2(), path + p.getValue1(), services);
 				}

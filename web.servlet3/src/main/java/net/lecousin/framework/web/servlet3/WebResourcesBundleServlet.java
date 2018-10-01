@@ -17,7 +17,9 @@ import net.lecousin.framework.application.LCCore;
 import net.lecousin.framework.collections.CollectionsUtil;
 import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.Threading;
+import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.concurrent.synch.ISynchronizationPoint;
+import net.lecousin.framework.exception.NoException;
 import net.lecousin.framework.injection.InjectionContext;
 import net.lecousin.framework.io.IO;
 import net.lecousin.framework.io.IOFromOutputStream;
@@ -26,8 +28,8 @@ import net.lecousin.framework.log.Logger;
 import net.lecousin.framework.network.http.HTTPRequest;
 import net.lecousin.framework.network.http.HTTPRequest.Method;
 import net.lecousin.framework.network.http.HTTPRequest.Protocol;
-import net.lecousin.framework.network.http.HTTPResponse;
 import net.lecousin.framework.network.http.exception.HTTPError;
+import net.lecousin.framework.network.http.server.HTTPServerResponse;
 import net.lecousin.framework.network.mime.MimeHeader;
 import net.lecousin.framework.network.session.ISession;
 import net.lecousin.framework.web.WebRequest;
@@ -88,13 +90,14 @@ public class WebResourcesBundleServlet implements Servlet {
 		}
 		req.setAttribute(ATTRIBUTE_HTTPSERVLETREQUEST, request);
 		
-		HTTPResponse resp = new HTTPResponse();
+		HTTPServerResponse resp = new HTTPServerResponse();
 		
 		AsyncContext ctx = servletRequest.startAsync();
 		WebRequest wr = new WebRequest(new RemoteBridge(request, ctx), req, resp, request.isSecure(), sessionProvider);
 		Object check = bundle.checkProcessing(wr);
 		if (check == null) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND);
+			resp.sent.unblock();
 			ctx.complete();
 			return;
 		}
@@ -116,10 +119,12 @@ public class WebResourcesBundleServlet implements Servlet {
 								} else
 									response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Error");
 							} catch (Throwable t) { /* ignore */ }
+							resp.sent.unblock();
 							ctx.complete();
 							return;
 						}
 						if (sp.isCancelled()) {
+							resp.sent.unblock();
 							ctx.complete();
 							return;
 						}
@@ -128,17 +133,20 @@ public class WebResourcesBundleServlet implements Servlet {
 							response.addHeader(h.getName(), h.getRawValue());
 						IO.Readable body = resp.getMIME().getBodyToSend();
 						if (body == null) {
+							resp.sent.unblock();
 							ctx.complete();
 							return;
 						}
 						OutputStream out;
 						try { out = response.getOutputStream(); }
 						catch (Throwable t) {
+							resp.sent.unblock();
 							ctx.complete();
 							return;
 						}
 						IO.Writable io = new IOFromOutputStream(out, "HTTP Response", Threading.getUnmanagedTaskManager(), Task.PRIORITY_NORMAL);
 						IOUtil.copy(body, io, -1, true, null, 0).listenInline(() -> {
+							resp.sent.unblock();
 							ctx.complete();
 						});
 					}
@@ -149,9 +157,9 @@ public class WebResourcesBundleServlet implements Servlet {
 	
 	protected WebSessionProvider sessionProvider = new WebSessionProvider() {
 		@Override
-		public ISession getSession(WebRequest request, boolean openIfNeeded) {
+		public AsyncWork<ISession, NoException> getSession(WebRequest request, boolean openIfNeeded) {
 			HttpServletRequest r = (HttpServletRequest)request.getRequest().getAttribute(ATTRIBUTE_HTTPSERVLETREQUEST);
-			return new SessionBridge(r.getSession(openIfNeeded));
+			return new AsyncWork<>(new SessionBridge(r.getSession(openIfNeeded)), null);
 		}
 		
 		@Override

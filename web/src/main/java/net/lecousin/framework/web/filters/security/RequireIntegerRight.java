@@ -4,11 +4,12 @@ import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.exception.NoException;
 import net.lecousin.framework.injection.Inject;
-import net.lecousin.framework.math.FragmentedRangeInteger;
+import net.lecousin.framework.math.FragmentedRangeLong;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestFilter;
 import net.lecousin.framework.web.security.IAuthentication;
 import net.lecousin.framework.web.security.IAuthenticationProvider;
+import net.lecousin.framework.web.security.IRightsManager;
 
 /**
  * Reject any request without authenticated user, or with a user who does not have the specified right.
@@ -16,21 +17,23 @@ import net.lecousin.framework.web.security.IAuthenticationProvider;
 public class RequireIntegerRight implements WebRequestFilter {
 
 	/** Constructor. */
-	public RequireIntegerRight(String rightName, FragmentedRangeInteger rightValues) {
+	public RequireIntegerRight(String rightName, FragmentedRangeLong rightValues) {
 		this.rightName = rightName;
 		this.rightValues = rightValues;
 	}
 
 	/** Constructor. */
 	public RequireIntegerRight() {
-		this(null, new FragmentedRangeInteger());
+		this(null, new FragmentedRangeLong());
 	}
 	
 	@Inject
 	private IAuthenticationProvider authenticationProvider;
+	@Inject
+	private IRightsManager rightsManager;
 	
 	private String rightName;
-	private FragmentedRangeInteger rightValues;
+	private FragmentedRangeLong rightValues;
 	
 	@Override
 	public AsyncWork<FilterResult, Exception> filter(WebRequest request) {
@@ -47,11 +50,11 @@ public class RequireIntegerRight implements WebRequestFilter {
 				IAuthentication a = auth.getResult();
 				if (a == null) {
 					// not authenticated
-					request.getResponse().setStatus(403, "You must be authenticated for this request");
+					request.getResponse().setStatus(401, "You must be authenticated for this request");
 					result.unblockSuccess(FilterResult.STOP_PROCESSING);
 					return null;
 				}
-				if (!a.hasRight(rightName, rightValues)) {
+				if (!rightsManager.hasRight(a, rightName, rightValues)) {
 					request.getResponse().setStatus(403, "Request not allowed, it needs right " + rightName);
 					result.unblockSuccess(FilterResult.STOP_PROCESSING);
 					return null;

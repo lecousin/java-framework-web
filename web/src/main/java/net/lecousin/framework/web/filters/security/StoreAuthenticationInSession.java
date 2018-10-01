@@ -1,9 +1,7 @@
 package net.lecousin.framework.web.filters.security;
 
-import net.lecousin.framework.concurrent.Task;
 import net.lecousin.framework.concurrent.synch.AsyncWork;
 import net.lecousin.framework.injection.Inject;
-import net.lecousin.framework.network.session.ISession;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestFilter;
 import net.lecousin.framework.web.security.IAuthentication;
@@ -21,24 +19,22 @@ public class StoreAuthenticationInSession implements WebRequestFilter {
 	
 	@Override
 	public AsyncWork<FilterResult, Exception> filter(WebRequest request) {
-		AsyncWork<IAuthentication, Exception> auth = request.authenticate(authenticationProvider);
 		AsyncWork<FilterResult, Exception> result = new AsyncWork<>();
-		if (auth.isUnblocked())
-			store(auth.getResult(), request, result);
-		else
-			auth.listenAsync(new Task.Cpu.FromRunnable("Check authentication", Task.PRIORITY_NORMAL, () -> {
-				store(auth.getResult(), request, result);
-			}), true); 
-		return result;
-	}
-	
-	private void store(IAuthentication a, WebRequest request, AsyncWork<FilterResult, Exception> result) {
-		if (a != null) {
-			ISession session = request.getSession(true);
-			if (session != null)
-				session.putData(sessionParameter, a);
+		IAuthentication auth = request.getAuthentication(authenticationProvider);
+		if (auth != null) {
+			request.getSession(true).listenInline((session) -> {
+				if (session != null)
+					session.putData(sessionParameter, auth);
+				result.unblockSuccess(FilterResult.CONTINUE_PROCESSING);
+			});
+		} else {
+			request.getSession(false).listenInline((session) -> {
+				if (session != null)
+					session.removeData(sessionParameter);
+				result.unblockSuccess(FilterResult.CONTINUE_PROCESSING);
+			});
 		}
-		result.unblockSuccess(FilterResult.CONTINUE_PROCESSING);
+		return result;
 	}
 	
 }

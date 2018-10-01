@@ -21,7 +21,7 @@ public class TestWebServer extends AbstractTest {
 			loadConfig.block(0);
 			if (loadConfig.hasError())
 				throw loadConfig.getError();
-			WebServer server = new WebServer(null, new SessionInMemory(), 10 * 60 * 1000, true);
+			WebServer server = new WebServer(null, new SessionInMemory(10 * 60 * 1000), true);
 			server.setConfiguration(loadConfig.getResult());
 			Thread.sleep(30 * 60 * 1000);
 			server.close();
