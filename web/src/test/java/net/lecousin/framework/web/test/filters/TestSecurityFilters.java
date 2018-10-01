@@ -22,7 +22,7 @@ public class TestSecurityFilters extends AbstractTest {
 			HTTPClientUtil.GETfully(BASE_HTTP_URL + "/filters/security/auth/test1", 0).blockResult(0);
 			throw new AssertionError("Error expected for unauthorized request");
 		} catch (HTTPResponseError e) {
-			Assert.assertEquals(403, e.getStatusCode());
+			Assert.assertEquals(401, e.getStatusCode());
 		}
 		
 		Pair<HTTPResponse, IO.Readable.Seekable> p;
@@ -110,7 +110,7 @@ public class TestSecurityFilters extends AbstractTest {
 			HTTPClientUtil.GETfully(BASE_HTTP_URL + "/filters/security/auth/test1?auth-token=guillaume", 0).blockResult(0);
 			throw new AssertionError("Error expected for unauthorized request");
 		} catch (HTTPResponseError e) {
-			Assert.assertEquals(403, e.getStatusCode());
+			Assert.assertEquals(401, e.getStatusCode());
 		}
 		
 		try {
@@ -131,7 +131,7 @@ public class TestSecurityFilters extends AbstractTest {
 			HTTPClientUtil.GETfully(BASE_HTTP_URL + "/filters/security/auth/test1", 0, new MimeHeader("token", "guillaume")).blockResult(0);
 			throw new AssertionError("Error expected for unauthorized request");
 		} catch (HTTPResponseError e) {
-			Assert.assertEquals(403, e.getStatusCode());
+			Assert.assertEquals(401, e.getStatusCode());
 		}
 	}
 
@@ -228,7 +228,7 @@ public class TestSecurityFilters extends AbstractTest {
 		} catch (HTTPResponseError e) {
 			if (accessExpected)
 				throw new AssertionError("Access denied for user " + username + " on path " + path, e);
-			Assert.assertEquals(403, e.getStatusCode());
+			Assert.assertEquals(username == null ? 401 : 403, e.getStatusCode());
 		}
 	}
 	
@@ -238,7 +238,7 @@ public class TestSecurityFilters extends AbstractTest {
 			HTTPClientUtil.GETfully(BASE_HTTP_URL + "/filters/security/session/test1", 0).blockResult(0);
 			throw new AssertionError("Error expected for unauthorized request");
 		} catch (HTTPResponseError e) {
-			Assert.assertEquals(403, e.getStatusCode());
+			Assert.assertEquals(401, e.getStatusCode());
 		}
 		
 		Pair<HTTPResponse, IO.Readable.Seekable> p;
@@ -256,7 +256,7 @@ public class TestSecurityFilters extends AbstractTest {
 			HTTPClientUtil.GETfully(BASE_HTTPS_URL + "/filters/security/session/test1", 0).blockResult(0);
 			throw new AssertionError("Error expected for unauthorized request");
 		} catch (HTTPResponseError e) {
-			Assert.assertEquals(403, e.getStatusCode());
+			Assert.assertEquals(401, e.getStatusCode());
 		}
 		p = HTTPClientUtil.GETfully(BASE_HTTPS_URL + "/filters/security/session/test1?user=guillaume", 0).blockResult(0);
 		content = IOUtil.readFullyAsStringSync(p.getValue2(), StandardCharsets.UTF_8);
@@ -269,7 +269,7 @@ public class TestSecurityFilters extends AbstractTest {
 			HTTPClientUtil.GETfully(BASE_HTTP_URL + "/filters/security/session/test1", 0, new MimeHeader("Cookie", "lc-session=" + sessionId)).blockResult(0);
 			throw new AssertionError("Error expected for unauthorized request");
 		} catch (HTTPResponseError e) {
-			Assert.assertEquals(403, e.getStatusCode());
+			Assert.assertEquals(401, e.getStatusCode());
 		}
 		
 		p = HTTPClientUtil.GETfully(BASE_HTTPS_URL + "/filters/security/session/test1", 0, new MimeHeader("Cookie", "lc-session=" + sessionId)).blockResult(0);
