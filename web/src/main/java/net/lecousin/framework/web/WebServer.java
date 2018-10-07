@@ -147,8 +147,8 @@ public class WebServer implements Closeable {
 				server.setProtocol(protocol);
 				InetSocketAddress addr = new InetSocketAddress(address, port);
 				try {
-					server.bind(addr, listen.backlog);
-				} catch (IOException e) {
+					server.bind(addr, listen.backlog).blockResult(0);
+				} catch (Exception e) {
 					logger.error("Unable to listen to " + address);
 					continue;
 				}

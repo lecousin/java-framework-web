@@ -70,5 +70,10 @@ public class RemoteBridge implements TCPRemote {
 			}
 		});
 	}
+	
+	@Override
+	public boolean isClosed() {
+		return false;
+	}
 
 }

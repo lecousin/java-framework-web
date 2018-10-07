@@ -38,18 +38,22 @@ public class LastMessageSSEProcessor extends SSEProcessor {
 	
 	@Override
 	protected ISynchronizationPoint<?> newClient(WebRequest request) {
-		ISynchronizationPoint<?> sendHeaders = super.newClient(request);
+		ISynchronizationPoint<?> res = super.newClient(request);
+		ISynchronizationPoint<?> sendHeaders = request.getResponse().sent;
+		TCPRemote client = request.getClient();
 		sendHeaders.listenInline(new Runnable() {
 			@Override
 			public void run() {
 				synchronized (LastMessageSSEProcessor.this) {
 					if (lastMessage == null)
 						return;
-					request.getClient().newDataToSendWhenPossible(dataProvider, new SynchronizationPoint<>());
+					if (client.isClosed())
+						return;
+					client.newDataToSendWhenPossible(dataProvider, new SynchronizationPoint<>());
 				}
 			}
 		});
-		return sendHeaders;
+		return res;
 	}
 	
 	@Override
