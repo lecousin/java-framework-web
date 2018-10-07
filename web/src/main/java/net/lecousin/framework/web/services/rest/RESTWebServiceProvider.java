@@ -12,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -112,6 +113,28 @@ public class RESTWebServiceProvider extends WebServiceProvider<REST> {
 		private WebService.RequireBooleanRight[] specificBooleanRights;
 		private WebService.RequireIntegerRight[] specificIntegerRights;
 	}
+	
+	private static final Comparator<RestMethod> methodComparator = new Comparator<RestMethod>() {
+		@Override
+		public int compare(RestMethod m1, RestMethod m2) {
+			// priority is given when not null
+			if (m1.firstPathElement != null) {
+				if (m2.firstPathElement == null)
+					return -1;
+			} else {
+				if (m2.firstPathElement != null)
+					return 1;
+			}
+			if (m1.secondPathElement != null) {
+				if (m2.secondPathElement == null)
+					return -1;
+			} else {
+				if (m2.secondPathElement != null)
+					return 1;
+			}
+			return 0;
+		}
+	};
 
 	private void parseService(WebResourcesBundle bundle) throws Exception {
 		for (Method m : service.getClass().getMethods()) {
@@ -307,6 +330,12 @@ public class RESTWebServiceProvider extends WebServiceProvider<REST> {
 			rm.subResource = new RESTWebServiceProvider(bundle, (REST)instance);
 			subResources.add(rm);
 		}
+		
+		getMethods.sort(methodComparator);
+		postMethods.sort(methodComparator);
+		putMethods.sort(methodComparator);
+		deleteMethods.sort(methodComparator);
+		subResources.sort(methodComparator);
 		
 		if (logger.debug()) {
 			StringBuilder s = new StringBuilder();

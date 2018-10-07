@@ -14,10 +14,11 @@ import net.lecousin.framework.io.buffering.ByteBuffersIO;
 import net.lecousin.framework.io.serialization.TypeDefinition;
 import net.lecousin.framework.json.JSONSerializer;
 import net.lecousin.framework.network.TCPRemote;
-import net.lecousin.framework.network.http.HTTPResponse;
+import net.lecousin.framework.network.http.server.HTTPServerResponse;
 import net.lecousin.framework.network.mime.MimeHeader;
 import net.lecousin.framework.network.mime.MimeMessage;
 import net.lecousin.framework.network.mime.header.ParameterizedHeaderValues;
+import net.lecousin.framework.util.IString;
 import net.lecousin.framework.web.WebRequest;
 import net.lecousin.framework.web.WebRequestProcessor;
 
@@ -50,6 +51,30 @@ public class SSEProcessor implements WebRequestProcessor {
 		return sendMessage(
 			id == null ? null : id.getBytes(StandardCharsets.UTF_8),
 			name == null ? null : name.getBytes(StandardCharsets.UTF_8),
+			data
+		);
+	}
+
+	public ISynchronizationPoint<?> sendMessage(String id, String name, IString data) {
+		return sendMessage(id, name, data.encode(StandardCharsets.UTF_8));
+	}
+
+	public ISynchronizationPoint<?> sendMessage(IString id, IString name, IString data) {
+		return sendMessage(id, name, data.encode(StandardCharsets.UTF_8));
+	}
+
+	public ISynchronizationPoint<?> sendMessage(String id, String name, ByteBuffer data) {
+		return sendMessage(
+			id == null ? null : ByteBuffer.wrap(id.getBytes(StandardCharsets.UTF_8)),
+			name == null ? null : ByteBuffer.wrap(name.getBytes(StandardCharsets.UTF_8)),
+			data
+		);
+	}
+
+	public ISynchronizationPoint<?> sendMessage(IString id, IString name, ByteBuffer data) {
+		return sendMessage(
+			id == null ? null : id.encode(StandardCharsets.UTF_8),
+			name == null ? null : name.encode(StandardCharsets.UTF_8),
 			data
 		);
 	}
@@ -89,6 +114,22 @@ public class SSEProcessor implements WebRequestProcessor {
 	private static final byte[] _data = { 'd','a','t','a',':',' ' };
 
 	public ISynchronizationPoint<?> sendMessage(byte[] id, byte[] name, byte[] data) {
+		if (clients.isEmpty()) return new SynchronizationPoint<>(true);
+		byte[] msg = buildMessage(id, name, data);
+		JoinPoint<IOException> jp = new JoinPoint<>();
+		synchronized (clients) {
+			for (int i = clients.size()-1; i >= 0; --i) {
+				try { jp.addToJoin(clients.get(i).send(ByteBuffer.wrap(msg))); }
+				catch (Throwable t) {
+					removeClient(clients.get(i));
+				}
+			}
+		}
+		jp.start();
+		return jp;
+	}
+	
+	public ISynchronizationPoint<?> sendMessage(ByteBuffer id, ByteBuffer name, ByteBuffer data) {
 		if (clients.isEmpty()) return new SynchronizationPoint<>(true);
 		byte[] msg = buildMessage(id, name, data);
 		JoinPoint<IOException> jp = new JoinPoint<>();
@@ -151,6 +192,44 @@ public class SSEProcessor implements WebRequestProcessor {
 		return msg;
 	}
 	
+	protected byte[] buildMessage(ByteBuffer id, ByteBuffer name, ByteBuffer data) {
+		int len = 0;
+		if (id != null)
+			len += 5 /*id: \n */ + id.remaining();
+		if (name != null)
+			len += 8 /*event: \n */ + name.remaining();
+		if (data != null) {
+			// TODO in \r or \n or \r\n in data, make multiple lines with data: xxx\n
+			len += 7 /*data: \n */ + data.remaining();
+		}
+		len++; /* \n */
+		byte[] msg = new byte[len];
+		int pos = 0;
+		if (id != null) {
+			System.arraycopy(_id, 0, msg, pos, _id.length);
+			pos += _id.length;
+			id.get(msg, pos, id.remaining());
+			pos += id.remaining();
+			msg[pos++] = NEW_LINE;
+		}
+		if (name != null) {
+			System.arraycopy(_event, 0, msg, pos, _event.length);
+			pos += _event.length;
+			name.get(msg, pos, name.remaining());
+			pos += name.remaining();
+			msg[pos++] = NEW_LINE;
+		}
+		if (data != null) {
+			System.arraycopy(_data, 0, msg, pos, _data.length);
+			pos += _data.length;
+			data.get(msg, pos, data.remaining());
+			pos += data.remaining();
+			msg[pos++] = NEW_LINE;
+		}
+		msg[pos] = NEW_LINE;
+		return msg;
+	}
+	
 	@Override
 	public Object checkProcessing(WebRequest request) {
 		boolean acceptEventStream = false;
@@ -174,10 +253,12 @@ public class SSEProcessor implements WebRequestProcessor {
 
 	@Override
 	public ISynchronizationPoint<? extends Exception> process(Object fromCheck, WebRequest request) {
-		HTTPResponse response = request.getResponse();
+		HTTPServerResponse response = request.getResponse();
+		response.setStatus(200);
 		response.noCache();
 		response.setRawContentType("text/event-stream");
 		response.getMIME().setHeaderRaw(MimeMessage.CONNECTION, "keep-alive");
+		response.forceNoContent = true;
 		try {
 			return newClient(request);
 		} catch (Throwable t) {

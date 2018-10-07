@@ -54,7 +54,7 @@ public class AuthenticationService implements REST {
 	}
 	
 	@REST.Method
-	public void deconnect(WebRequest req) {
+	public void disconnect(WebRequest req) {
 		req.clearAuthentication(provider);
 	}
 	
