@@ -187,7 +187,7 @@ public final class SOAPClient {
 		if (contentType != null) {
 			encoding = contentType.getParameterIgnoreCase("charset");
 		}
-		XMLStreamReaderAsync xml = new XMLStreamReaderAsync(content, Charset.forName(encoding), 4096);
+		XMLStreamReaderAsync xml = new XMLStreamReaderAsync(content, Charset.forName(encoding), 4096, 8);
 		ISynchronizationPoint<Exception> start = xml.startRootElement();
 		start.listenAsync(new Task.Cpu.FromRunnable("Parse SOAP response", Task.PRIORITY_NORMAL, () -> {
 			if (start.hasError()) {

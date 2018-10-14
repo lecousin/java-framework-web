@@ -437,7 +437,7 @@ public class WebResourcesBundle implements WebRequestProcessor {
 			io = new FileIO.ReadOnly(f, Task.PRIORITY_NORMAL);
 		}
 		try {
-			XMLStreamReader xml = new XMLStreamReader(io, 4096);
+			XMLStreamReader xml = new XMLStreamReader(io, 4096, 8);
 			xml.startRootElement();
 			configure(xml);
 		} finally {

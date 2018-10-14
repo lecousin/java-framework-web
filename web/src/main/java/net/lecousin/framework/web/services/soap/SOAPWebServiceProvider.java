@@ -210,7 +210,7 @@ public class SOAPWebServiceProvider extends WebServiceProvider<SOAP> {
 			if (charset != null)
 				try { encoding = Charset.forName(charset); }
 				catch (Throwable t) {}
-			XMLStreamReaderAsync xml = new XMLStreamReaderAsync(input, encoding, 8192);
+			XMLStreamReaderAsync xml = new XMLStreamReaderAsync(input, encoding, 8192, 4);
 			processOperation(op, xml, request, sp);
 			return;
 		}
