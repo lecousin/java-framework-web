@@ -17,7 +17,7 @@ public class TestWebServer extends AbstractTest {
 		try {
 			Application.start(new Artifact("net.lecousin.framework.test", "test", new Version(LCCoreVersion.VERSION)), true).block(0);
 			initLogging();
-			AsyncWork<WebServerConfig, Exception> loadConfig = XMLDeserializer.deserializeResource("test-webserver/server.xml", WebServerConfig.class, Task.PRIORITY_NORMAL);
+			AsyncWork<WebServerConfig, Exception> loadConfig = XMLDeserializer.deserializeResource("test-webserver/server.xml", WebServerConfig.class, null, Task.PRIORITY_NORMAL);
 			loadConfig.block(0);
 			if (loadConfig.hasError())
 				throw loadConfig.getError();

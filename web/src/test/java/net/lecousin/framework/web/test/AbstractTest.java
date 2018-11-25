@@ -32,7 +32,7 @@ public abstract class AbstractTest extends AbstractNetworkTest {
 
 	@BeforeClass
 	public static void startServer() throws Exception {
-		AsyncWork<WebServerConfig, Exception> loadConfig = XMLDeserializer.deserializeResource("test-webserver/server.xml", WebServerConfig.class, Task.PRIORITY_NORMAL);
+		AsyncWork<WebServerConfig, Exception> loadConfig = XMLDeserializer.deserializeResource("test-webserver/server.xml", WebServerConfig.class, null, Task.PRIORITY_NORMAL);
 		loadConfig.block(0);
 		if (loadConfig.hasError())
 			throw loadConfig.getError();

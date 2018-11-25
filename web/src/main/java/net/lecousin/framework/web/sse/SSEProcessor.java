@@ -208,22 +208,25 @@ public class SSEProcessor implements WebRequestProcessor {
 		if (id != null) {
 			System.arraycopy(_id, 0, msg, pos, _id.length);
 			pos += _id.length;
-			id.get(msg, pos, id.remaining());
-			pos += id.remaining();
+			int l = id.remaining();
+			id.get(msg, pos, l);
+			pos += l;
 			msg[pos++] = NEW_LINE;
 		}
 		if (name != null) {
 			System.arraycopy(_event, 0, msg, pos, _event.length);
 			pos += _event.length;
-			name.get(msg, pos, name.remaining());
-			pos += name.remaining();
+			int l = name.remaining();
+			name.get(msg, pos, l);
+			pos += l;
 			msg[pos++] = NEW_LINE;
 		}
 		if (data != null) {
 			System.arraycopy(_data, 0, msg, pos, _data.length);
 			pos += _data.length;
-			data.get(msg, pos, data.remaining());
-			pos += data.remaining();
+			int l = data.remaining();
+			data.get(msg, pos, l);
+			pos += l;
 			msg[pos++] = NEW_LINE;
 		}
 		msg[pos] = NEW_LINE;
