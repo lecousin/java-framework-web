@@ -61,7 +61,7 @@
   <!-- Repository for tests with SOAPUI -->
   <repositories>
   	<repository>
-  		<id>maven2</id>
+  		<id>smartbear</id>
   		<url>http://smartbearsoftware.com/repository/maven2</url>
   	</repository>
   </repositories>
